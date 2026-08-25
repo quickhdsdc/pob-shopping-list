@@ -1,0 +1,16 @@
+This product includes data derived from Path of Building Community.
+
+  Path of Building Community
+  https://github.com/PathOfBuildingCommunity/PathOfBuilding
+  Copyright (c) 2016 David Gowor
+  Licensed under the MIT License.
+
+Specifically, data/stat-lut.tsv is extracted from that project's
+Data/TradeSiteStats.lua, which is itself a mirror of the official
+Path of Exile trade API stat listing:
+
+  https://www.pathofexile.com/api/trade/data/stats
+
+Path of Exile game data is copyright Grinding Gear Games.
+This project is not affiliated with, endorsed by, or sponsored by
+Grinding Gear Games.
