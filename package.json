@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "test:smoke": "powershell -ExecutionPolicy Bypass -File test/smoke.ps1",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
-    "data": "node tools/extract-lut.mjs && node tools/extract-bases.mjs",
+    "data": "node tools/extract-lut.mjs && node tools/extract-bases.mjs && node tools/extract-icons.mjs",
     "test:offline": "powershell -ExecutionPolicy Bypass -File test/offline.ps1",
     "worker:dev": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy"
