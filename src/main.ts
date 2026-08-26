@@ -1,29 +1,20 @@
 /** 页面装配：读控件、跑流程、把结果交给 ui.ts 渲染。 */
 
 import { fetchLeagues, ImportError, importFromUrl, looksLikeUrl } from './api.js';
+import { COPY } from './copy.js';
 import { parseBuild } from './core/build.js';
 import { isUniqueRarity } from './core/items.js';
-import { decodePobCode, PobError, type PobErrorCode } from './core/pob.js';
+import { decodePobCode, PobError } from './core/pob.js';
 import { buildQuery, type TradeStatus, tradeUrl } from './core/query.js';
 import { matchMod } from './core/stats.js';
 import { loadTables, type Tables } from './data.js';
-import { type CardState, renderCards } from './ui.js';
+import { type CardState, renderCards, renderSummary } from './ui.js';
 
 declare const __DATA_VERSION__: string;
 
-const MESSAGES: Record<PobErrorCode, string> = {
-  empty: '先粘贴 PoB 代码',
-  'is-url': '请粘贴代码本身，不是链接 —— 浏览器跨域读不到 pobb.in / pob.cool',
-  'bad-base64': '不是合法的 base64，检查有没有复制全',
-  'no-decompression': '浏览器太旧，不支持 DecompressionStream，请换 Chrome / Edge / Firefox 新版',
-  'inflate-failed': '解压失败，这可能不是一段 PoB 代码',
-  'bad-xml': '解出来的不是合法的 PoB 存档',
-  'no-items': '这段代码里没有任何装备',
-};
-
 function need<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);
-  if (!node) throw new Error(`页面缺少 #${id}`);
+  if (!node) throw new Error(`page is missing #${id}`);
   return node as T;
 }
 
@@ -35,6 +26,7 @@ const maxModsInput = need<HTMLInputElement>('maxmods');
 const goButton = need<HTMLButtonElement>('go');
 const copyAllButton = need<HTMLButtonElement>('copyall');
 const statusLine = need<HTMLParagraphElement>('status');
+const summaryBar = need<HTMLDivElement>('summary');
 const output = need<HTMLDivElement>('out');
 
 let tables: Tables | null = null;
@@ -45,16 +37,12 @@ function say(message: string, kind: '' | 'ok' | 'err' = ''): void {
   statusLine.className = kind;
 }
 
-function league(): string {
-  return leagueInput.value;
-}
-
 function status(): TradeStatus {
   return statusSelect.value as TradeStatus;
 }
 
 function urlFor(card: CardState): string {
-  return tradeUrl(league(), buildQuery(card, status()));
+  return tradeUrl(leagueInput.value, buildQuery(card, status()));
 }
 
 function numberFrom(input: HTMLInputElement, fallback: number): number {
@@ -73,31 +61,32 @@ async function copyText(text: string): Promise<boolean> {
 
 async function run(): Promise<void> {
   if (!tables) {
-    say('对照表还没加载完，稍等一下', 'err');
+    say(COPY.status.notReady, 'err');
     return;
   }
+
   // 贴的是链接就先让 Worker 去把代码取回来，取到之后原地替换掉输入框内容 ——
   // 用户能看见拿到的是什么，也能在导入之后再手改。
   let raw = codeInput.value;
   if (looksLikeUrl(raw)) {
-    say('正在从链接取回 build…');
+    say(COPY.status.importing);
     try {
       raw = await importFromUrl(raw);
       codeInput.value = raw;
     } catch (e) {
-      say(e instanceof ImportError ? e.message : `导入失败：${String(e)}`, 'err');
+      say(e instanceof ImportError ? e.message : String(e), 'err');
       return;
     }
   }
 
-  say('解码中…');
+  say(COPY.status.decoding);
 
   let items;
   try {
     const xml = await decodePobCode(raw);
     items = parseBuild(xml, tables.bases);
   } catch (e) {
-    say(e instanceof PobError ? MESSAGES[e.code] : `出错了：${String(e)}`, 'err');
+    say(e instanceof PobError ? COPY.errors[e.code] : String(e), 'err');
     return;
   }
 
@@ -114,30 +103,25 @@ async function run(): Promise<void> {
       onSearch: (card) => window.open(urlFor(card), '_blank', 'noopener'),
       onCopy: async (card, button) => {
         const ok = await copyText(urlFor(card));
-        button.textContent = ok ? '已复制' : '失败';
-        setTimeout(() => (button.textContent = '复制'), 1500);
+        button.textContent = ok ? COPY.buttons.copied : COPY.buttons.copyFailed;
+        setTimeout(() => (button.textContent = COPY.buttons.copy), 1500);
       },
     },
   );
 
   // 传奇按名字搜，词条识别与否不影响结果，所以只统计稀有/魔法装备上的
-  let modTotal = 0;
-  let nonUniqueMods = 0;
+  let matched = 0;
   let unmatched = 0;
   for (const item of items) {
-    modTotal += item.mods.length;
     if (isUniqueRarity(item.rarity)) continue;
     for (const m of item.mods) {
-      nonUniqueMods++;
-      if (!matchMod(stats, m).id) unmatched++;
+      if (matchMod(stats, m).id) matched++;
+      else unmatched++;
     }
   }
-  say(
-    `解析出 ${items.length} 件装备，共 ${modTotal} 条词条。` +
-      `稀有/魔法装备 ${nonUniqueMods} 条里有 ${unmatched} 条未识别（红色标出，需手动处理）；` +
-      `传奇按名字搜，词条不影响。`,
-    'ok',
-  );
+  renderSummary(summaryBar, { items: items.length, matched, unmatched });
+  copyAllButton.textContent = COPY.buttons.copyAll(cards.length);
+  say('');
 }
 
 goButton.addEventListener('click', () => {
@@ -147,14 +131,14 @@ goButton.addEventListener('click', () => {
 copyAllButton.addEventListener('click', () => {
   void (async () => {
     if (cards.length === 0) {
-      say('还没生成', 'err');
+      say(COPY.copyAll.nothing, 'err');
       return;
     }
     const text = cards
       .map((c) => `### ${c.name}${c.base && c.base !== c.name ? ` | ${c.base}` : ''}\n${urlFor(c)}`)
       .join('\n\n');
     const ok = await copyText(text);
-    say(ok ? `已复制 ${cards.length} 条链接` : '复制失败', ok ? 'ok' : 'err');
+    say(ok ? COPY.copyAll.done(cards.length) : COPY.copyAll.failed, ok ? 'ok' : 'err');
   })();
 });
 
@@ -189,7 +173,7 @@ void (async () => {
     goButton.disabled = false;
     say('');
   } catch (e) {
-    say(`词条对照表加载失败：${String(e)}`, 'err');
+    say(COPY.status.tablesFailed(String(e)), 'err');
   }
   // 赛季列表取不到不影响主流程，所以不拦着上面的按钮解禁
   await populateLeagues();

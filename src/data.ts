@@ -15,7 +15,7 @@ export interface Tables {
 
 async function fetchText(url: string): Promise<string> {
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`取不到 ${url}（HTTP ${res.status}）`);
+  if (!res.ok) throw new Error(`could not fetch ${url} (HTTP ${res.status})`);
   return res.text();
 }
 

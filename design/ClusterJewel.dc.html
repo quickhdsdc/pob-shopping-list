@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; background: #13151a;
+      font-family: "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+      font-size: 15px; line-height: 1.5; color: #e3e6eb; }
+    a { color: #d08b4f; } a:hover { color: #e0a06a; }
+  </style>
+</helmet>
+
+<div style="padding: 26px 28px 32px; background: #13151a; min-height: 100%;">
+
+  <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">Cluster jewel &#183; small passive enchants</div>
+  <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 20px; font-weight: 600; margin-top: 5px;">One stat, many options</div>
+  <p style="font-size: 13.5px; color: #98a0af; margin: 7px 0 0; max-width: 620px; text-wrap: pretty;">Every small-passive enchant on a cluster jewel is the same trade stat with a different option index. The search has to say <em style="color: #e3e6eb; font-style: normal;">which</em> ones, so this is the one mod that needs a choice rather than a threshold.</p>
+
+  <div style="border: 1px solid #3b3524; border-radius: 3px; background: #1a1d24; padding: 16px 18px; margin-top: 20px;">
+
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 12px; border-bottom: 1px solid #2a2f39;">
+      <div>
+        <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">Tree Jewel &#183; 55373</div>
+        <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 17px; font-weight: 600; line-height: 1.25; color: #ddd06a;">Carrion Creed</div>
+        <div style="font-size: 13px; color: #98a0af;">Large Cluster Jewel &#183; 8 passives</div>
+      </div>
+      <button style="font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 2px; background: #d08b4f; color: #1a1206; border: 1px solid #d08b4f; cursor: pointer;">Search</button>
+    </div>
+
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 14px;">
+      <div style="font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 12px; color: #9aa4d6;">Added Small Passive Skills grant:</div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Require</span>
+        <div style="display: flex; border: 1px solid #2a2f39; border-radius: 2px; overflow: hidden;">
+          <div onClick="{{ pickAll }}" style="{{ allStyle }}">All picked</div>
+          <div onClick="{{ pickSome }}" style="{{ someStyle }}">At least 1</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 12px;">
+      <sc-for list="{{options}}" as="opt" hint-placeholder-count="4">
+        <div onClick="{{ opt.toggle }}" style="{{ opt.rowStyle }}">
+          <div style="{{ opt.boxStyle }}">
+            <sc-if value="{{ opt.on }}" hint-placeholder-val="{{ true }}">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </sc-if>
+          </div>
+          <div style="{{ opt.textStyle }}">{{ opt.label }}</div>
+          <div style="font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 11px; color: #4b525e;">{{ opt.index }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 10px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6f7787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+      <div style="font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 11.5px; color: #98a0af; line-height: 1.7;">{{ queryLine }}</div>
+    </div>
+
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px;">
+    <div style="border: 1px solid #2a2f39; border-radius: 3px; background: #1a1d24; padding: 13px 14px;">
+      <div style="font-size: 13.5px; font-weight: 600;">Why a picker and not a number</div>
+      <p style="font-size: 12.5px; color: #98a0af; margin: 6px 0 0; line-height: 1.55;">The value on these mods is baked into the option, not into a range. &#8220;12% increased Axe Damage&#8221; is option 49; there is no threshold to relax.</p>
+    </div>
+    <div style="border: 1px solid #2a2f39; border-radius: 3px; background: #1a1d24; padding: 13px 14px;">
+      <div style="font-size: 13.5px; font-weight: 600;">Why &#8220;at least 1&#8221; matters</div>
+      <p style="font-size: 12.5px; color: #98a0af; margin: 6px 0 0; line-height: 1.55;">Demanding every enchant usually returns nothing. Loosening to one of the useful ones is what makes a cluster jewel findable at all.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":900,"height":860}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      mode: 'some',
+      on: { axe: true, sword: true, dex: false, life: false }
+    };
+  }
+
+  renderVals() {
+    const defs = [
+      { key: 'axe',   label: 'Axe Attacks deal 12% increased Damage with Hits and Ailments', index: '|49' },
+      { key: 'sword', label: 'Sword Attacks deal 12% increased Damage with Hits and Ailments', index: '|47' },
+      { key: 'dex',   label: '+3 to Dexterity', index: '|12' },
+      { key: 'life',  label: '4% increased maximum Life', index: '|23' }
+    ];
+
+    const options = defs.map((d) => {
+      const on = !!this.state.on[d.key];
+      return {
+        label: d.label,
+        index: d.index,
+        on,
+        toggle: () => this.setState({ on: { ...this.state.on, [d.key]: !on } }),
+        rowStyle: 'display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 2px; cursor: pointer; border: 1px solid '
+          + (on ? '#6d5426' : '#2a2f39') + '; background: ' + (on ? '#241f14' : '#181b21') + ';',
+        boxStyle: 'width: 14px; height: 14px; border-radius: 2px; display: flex; align-items: center; justify-content: center; background: '
+          + (on ? '#d08b4f' : '#20242c') + '; border: 1px solid ' + (on ? '#d08b4f' : '#3a4150') + ';',
+        textStyle: 'font-family: "Cascadia Mono",Consolas,ui-monospace,monospace; font-size: 12px; color: '
+          + (on ? '#ddd06a' : '#6f7787') + ';'
+      };
+    });
+
+    const picked = options.filter((o) => o.on).length;
+    const tab = (active) => 'font-size: 12px; padding: 5px 12px; cursor: pointer; background: '
+      + (active ? '#d08b4f' : 'transparent') + '; color: ' + (active ? '#1a1206' : '#98a0af')
+      + '; font-weight: ' + (active ? '600' : '400') + ';';
+
+    const queryLine = picked === 0
+      ? 'no enchant filter — the search will match any small passives'
+      : this.state.mode === 'all'
+        ? '"type": "and", ' + picked + ' filter' + (picked === 1 ? '' : 's') + ' on enchant.stat_3948993189'
+        : '"type": "count", "value": { "min": 1 }, ' + picked + ' candidate' + (picked === 1 ? '' : 's');
+
+    return {
+      options,
+      queryLine,
+      allStyle: tab(this.state.mode === 'all'),
+      someStyle: tab(this.state.mode === 'some'),
+      pickAll: () => this.setState({ mode: 'all' }),
+      pickSome: () => this.setState({ mode: 'some' })
+    };
+  }
+}
+</script>
+</body>
+</html>

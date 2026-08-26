@@ -3,7 +3,7 @@
   --ink:#191c22; --muted:#5d6473; --faint:#868d9c; --line:#ccd1d9;
   --unique:#8d5117; --rare:#6f5f0c; --magic:#33409e; --normal:#4a4f5a;
   --modtext:#464f8c; --accent:#8d5117; --accent-ink:#fff;
-  --ok:#2f6b46; --bad:#9c3025;
+  --ok:#2f6b46; --bad:#9c3025; --bad-line:#d8b3ad; --bad-bg:#f7ecea;
 }
 @media (prefers-color-scheme:dark){
   :root{
@@ -11,30 +11,31 @@
     --ink:#e3e6eb; --muted:#98a0af; --faint:#6f7787; --line:#2a2f39;
     --unique:#d08b4f; --rare:#ddd06a; --magic:#93a0ea; --normal:#b6bcc7;
     --modtext:#9aa4d6; --accent:#d08b4f; --accent-ink:#1a1206;
-    --ok:#6cc08d; --bad:#e07a6c;
+    --ok:#6cc08d; --bad:#e07a6c; --bad-line:#4a3630; --bad-bg:#1d1719;
   }
 }
 *{box-sizing:border-box}
 body{background:var(--bg); color:var(--ink); margin:0;
   font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
   font-size:15px; line-height:1.5;}
-.wrap{max-width:1000px; margin:0 auto; padding:0 20px 80px}
-header{border-bottom:1px solid var(--line); padding:22px 0 16px; margin-bottom:24px}
+.wrap{max-width:1240px; margin:0 auto; padding:0 20px 80px}
+header{border-bottom:1px solid var(--line); padding:22px 0 16px; margin-bottom:20px}
 h1{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
    font-size:26px; margin:0 0 4px; font-weight:600}
 h1 small{display:block; font-size:12px; font-weight:400; letter-spacing:.14em;
    text-transform:uppercase; color:var(--faint); margin-top:6px; font-family:inherit}
+.lede{font-size:14px; color:var(--muted); margin:0 0 16px; max-width:640px; text-wrap:pretty}
 
-textarea{width:100%; min-height:96px; font-family:"Cascadia Mono",Consolas,monospace;
-  font-size:12px; padding:10px; border:1px solid var(--line); border-radius:3px;
-  background:var(--panel); color:var(--ink); resize:vertical}
-.ctl{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:flex-end; margin:14px 0}
+textarea{width:100%; min-height:120px; font-family:"Cascadia Mono",Consolas,ui-monospace,monospace;
+  font-size:12px; padding:12px; border:1px solid var(--line); border-radius:3px;
+  background:var(--panel); color:var(--ink); resize:vertical; line-height:1.6}
+.ctl{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:flex-end; margin:14px 0 0}
 .f{display:flex; flex-direction:column; gap:4px}
 .f label{font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--muted)}
 input,select{font:inherit; font-size:14px; padding:6px 9px; background:var(--panel);
   color:var(--ink); border:1px solid var(--line); border-radius:2px}
 input[type=number]{width:78px}
-#league{width:150px}
+#league{width:168px}
 button{font:inherit; font-size:13px; font-weight:600; padding:8px 16px; cursor:pointer;
   border-radius:2px; background:var(--accent); color:var(--accent-ink); border:1px solid var(--accent)}
 button:hover:not(:disabled){filter:brightness(1.08)}
@@ -43,12 +44,27 @@ button.sec{background:transparent; color:var(--muted); border-color:var(--line);
 button.sec:hover:not(:disabled){color:var(--ink); border-color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 
+.hint{font-size:12px; color:var(--faint); margin:9px 0 0}
 #status{font-size:13px; color:var(--muted); margin:10px 0 0; min-height:20px}
 #status.err{color:var(--bad)}
 #status.ok{color:var(--ok)}
 
+/* 统计条：以前是一句流水账，扫一眼看不出识别率 */
+#summary{display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px;
+  margin:12px 0 0; padding:10px 14px; font-size:12px; color:var(--muted);
+  background:var(--panel); border:1px solid var(--line); border-radius:3px}
+#summary strong{color:var(--ink); font-weight:600}
+#summary .n-ok strong{color:var(--ok)}
+#summary .n-bad strong{color:var(--bad)}
+#summary .sep{color:var(--line)}
+
+/* 44 件装备单列太长，宽屏下双列 */
+#out{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; margin-top:16px}
+#out .empty{grid-column:1 / -1}
+
 .card{border:1px solid var(--line); border-radius:3px; background:var(--panel);
-  padding:14px 16px; margin-bottom:12px}
+  padding:14px 16px}
+.card.has-warn{border-color:var(--bad-line)}
 .chead{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap}
 .slot{font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint)}
 .iname{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
@@ -62,20 +78,26 @@ button.sec:hover:not(:disabled){color:var(--ink); border-color:var(--accent)}
 .acts{display:flex; gap:6px; align-items:center; flex-shrink:0}
 
 table.mods{width:100%; border-collapse:collapse; margin-top:11px;
-  font-family:"Cascadia Mono",Consolas,monospace; font-size:12px}
-table.mods td{padding:3px 6px 3px 0; vertical-align:middle; border-top:1px solid var(--line)}
+  font-family:"Cascadia Mono",Consolas,ui-monospace,monospace; font-size:12px}
+table.mods td{padding:4px 6px 4px 0; vertical-align:middle; border-top:1px solid var(--line)}
 table.mods tr:first-child td{border-top:none}
 td.txt{color:var(--modtext); width:100%}
 td.txt.off{color:var(--faint); text-decoration:line-through}
 td.txt.nomatch{color:var(--bad); text-decoration:none}
+td.reason{font-family:"Segoe UI",system-ui,sans-serif; font-size:11.5px;
+  color:var(--faint); white-space:nowrap; text-align:right}
 td.num{white-space:nowrap}
-td.num input{width:66px; font-size:11.5px; padding:3px 5px; font-family:inherit}
+td.num input{width:62px; font-size:11.5px; padding:3px 6px; font-family:inherit; text-align:right}
 .cmp{color:var(--faint); font-size:11px; margin-right:3px}
 .badge{display:inline-block; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
   border:1px solid var(--line); color:var(--faint); padding:0 4px; border-radius:2px; margin-left:6px;
-  font-family:"Segoe UI",sans-serif; vertical-align:1px}
-.hint{font-size:12px; color:var(--faint); margin:9px 0 0}
+  font-family:"Segoe UI",system-ui,sans-serif; vertical-align:1px}
+.badge.bad{border-color:var(--bad-line); color:var(--bad)}
 .empty{color:var(--faint); font-size:14px; padding:30px 0; text-align:center}
+
+@media (max-width:1080px){
+  #out{grid-template-columns:1fr}
+}
 
 /* 手机上一堆卡片得能看 —— 表头竖排，操作按钮撑满一行 */
 @media (max-width:640px){
@@ -85,7 +107,8 @@ td.num input{width:66px; font-size:11.5px; padding:3px 5px; font-family:inherit}
   .acts{width:100%}
   .acts button{flex:1}
   .ctl{gap:10px 12px}
-  #league{width:120px}
+  #league{width:140px}
   table.mods{font-size:11px}
+  td.reason{display:none}
   td.num input{width:56px}
 }

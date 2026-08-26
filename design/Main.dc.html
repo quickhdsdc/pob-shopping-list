@@ -1,0 +1,237 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; background: #13151a;
+      font-family: "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+      font-size: 15px; line-height: 1.5; color: #e3e6eb; }
+    a { color: #d08b4f; } a:hover { color: #e0a06a; }
+  </style>
+</helmet>
+
+<div style="padding: 26px 28px 36px; background: #13151a; min-height: 100%;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; border-bottom: 1px solid #2a2f39; padding-bottom: 16px;">
+    <div>
+      <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 26px; font-weight: 600; line-height: 1.2;">PoE Shopping List</div>
+      <div style="font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #6f7787; margin-top: 6px;">One trade search per item, from any Path of Building code</div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button style="font: inherit; font-size: 13px; padding: 8px 16px; border-radius: 2px; background: transparent; color: #98a0af; border: 1px solid #2a2f39; cursor: pointer;">Start over</button>
+      <button style="font: inherit; font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 2px; background: #d08b4f; color: #1a1206; border: 1px solid #d08b4f; cursor: pointer;">Copy all 44 links</button>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: flex-end; margin: 16px 0 14px; padding: 12px 14px; background: #1a1d24; border: 1px solid #2a2f39; border-radius: 3px;">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <label style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">League</label>
+      <div style="font-size: 14px; padding: 6px 9px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 168px; display: flex; justify-content: space-between; align-items: center;">
+        <span>Allflame</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6f7787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <label style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Listing</label>
+      <div style="font-size: 14px; padding: 6px 9px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 148px; display: flex; justify-content: space-between; align-items: center;">
+        <span>Buyout</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6f7787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <label style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Tolerance</label>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="font-size: 14px; padding: 6px 9px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 62px; text-align: right;">80%</div>
+        <div style="width: 108px; height: 3px; background: #2a2f39; border-radius: 2px; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; height: 3px; width: 78px; background: #d08b4f; border-radius: 2px;"></div>
+          <div style="position: absolute; left: 72px; top: -4px; width: 11px; height: 11px; border-radius: 50%; background: #d08b4f;"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <label style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Mods per item</label>
+      <div style="font-size: 14px; padding: 6px 9px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 62px; text-align: right;">4</div>
+    </div>
+    <div style="flex-grow: 1;"></div>
+    <div style="display: flex; align-items: center; gap: 16px; font-size: 12px; color: #98a0af;">
+      <span><strong style="color: #e3e6eb; font-weight: 600;">44</strong> items</span>
+      <span style="color: #2a2f39;">|</span>
+      <span><strong style="color: #6cc08d; font-weight: 600;">137</strong> mods matched</span>
+      <span style="color: #2a2f39;">|</span>
+      <span><strong style="color: #e07a6c; font-weight: 600;">12</strong> unrecognised</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+
+    <!-- RARE -->
+    <div style="border: 1px solid #2a2f39; border-radius: 3px; background: #1a1d24; padding: 14px 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div>
+          <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">Gloves</div>
+          <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 17px; font-weight: 600; line-height: 1.25; color: #ddd06a;">Cataclysm Claw</div>
+          <div style="font-size: 13px; color: #98a0af;">Slink Gloves</div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-shrink: 0;">
+          <button style="font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 2px; background: #d08b4f; color: #1a1206; border: 1px solid #d08b4f; cursor: pointer;">Search</button>
+          <button style="font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 2px; background: transparent; color: #98a0af; border: 1px solid #2a2f39; cursor: pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; margin-top: 11px; font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 12px;">
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div style="color: #9aa4d6;">14% increased Attack Speed</div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #6f7787; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 58px; text-align: right;">11</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div style="color: #9aa4d6;">+82 to maximum Life</div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #6f7787; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 58px; text-align: right;">65</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div style="color: #9aa4d6;">+16% to all Elemental Resistances<span style="display: inline-block; font-family: 'Segoe UI',sans-serif; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid #2a2f39; color: #6f7787; padding: 0 4px; border-radius: 2px; margin-left: 6px; vertical-align: 1px;">Implicit</span></div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #6f7787; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 58px; text-align: right;">12</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; border: 1px solid #3a4150; background: #20242c;"></div>
+          <div style="color: #6f7787; text-decoration: line-through;">Socketed Attacks have +90% to Critical Strike Multiplier</div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #2a2f39; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #191c22; border: 1px solid #23272f; border-radius: 2px; width: 58px; text-align: right; color: #4b525e;">72</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; border: 1px dashed #4a3630; background: #1d1719;"></div>
+          <div style="color: #e07a6c;">Curse Enemies with Punishment on Hit<span style="display: inline-block; font-family: 'Segoe UI',sans-serif; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid #4a3630; color: #e07a6c; padding: 0 4px; border-radius: 2px; margin-left: 6px; vertical-align: 1px;">No filter</span></div>
+          <div></div>
+        </div>
+      </div>
+
+      <p style="font-size: 12px; color: #6f7787; margin: 9px 0 0;">4 explicit mods picked automatically. Thresholds are the original values at 80%.</p>
+    </div>
+
+    <!-- UNIQUE -->
+    <div style="border: 1px solid #2a2f39; border-radius: 3px; background: #1a1d24; padding: 14px 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div>
+          <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">Body Armour</div>
+          <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 17px; font-weight: 600; line-height: 1.25; color: #d08b4f;">Shroud of the Lightless</div>
+          <div style="font-size: 13px; color: #98a0af;">Carnal Armour</div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-shrink: 0;">
+          <button style="font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 2px; background: #d08b4f; color: #1a1206; border: 1px solid #d08b4f; cursor: pointer;">Search</button>
+          <button style="font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 2px; background: transparent; color: #98a0af; border: 1px solid #2a2f39; cursor: pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 10px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d08b4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+        <span style="font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 12px; color: #98a0af;">name = <span style="color: #d08b4f;">Shroud of the Lightless</span> &nbsp;type = <span style="color: #e3e6eb;">Carnal Armour</span></span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; margin-top: 10px; font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 12px;">
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; border: 1px solid #3a4150; background: #20242c;"></div>
+          <div style="color: #6f7787;">Has 2 Abyssal Sockets</div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #2a2f39; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #191c22; border: 1px solid #23272f; border-radius: 2px; width: 58px; text-align: right; color: #4b525e;">2</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; border: 1px solid #3a4150; background: #20242c;"></div>
+          <div style="color: #6f7787;">Socketed Gems are Supported by Level 25 Added Chaos Damage</div>
+          <div></div>
+        </div>
+      </div>
+
+      <p style="font-size: 12px; color: #6f7787; margin: 9px 0 0;">Uniques search by name and base. Tick a mod only to narrow the roll.</p>
+    </div>
+
+    <!-- MAGIC -->
+    <div style="border: 1px solid #2a2f39; border-radius: 3px; background: #1a1d24; padding: 14px 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div>
+          <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">Flask 2</div>
+          <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 17px; font-weight: 600; line-height: 1.25; color: #93a0ea;">Flagellant&#39;s Quicksilver Flask of Incision</div>
+          <div style="font-size: 13px; color: #98a0af;">Quicksilver Flask</div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-shrink: 0;">
+          <button style="font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 2px; background: #d08b4f; color: #1a1206; border: 1px solid #d08b4f; cursor: pointer;">Search</button>
+          <button style="font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 2px; background: transparent; color: #98a0af; border: 1px solid #2a2f39; cursor: pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; margin-top: 11px; font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 12px;">
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div style="color: #9aa4d6;">55% increased Movement Speed</div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #6f7787; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 58px; text-align: right;">44</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div style="color: #9aa4d6;">66% reduced Amount Recovered</div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #d08b4f; font-size: 11px;">&#8804;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 58px; text-align: right;">-52</div></div>
+        </div>
+      </div>
+
+      <p style="font-size: 12px; color: #6f7787; margin: 9px 0 0;">&#8804; because the trade site stores &#8220;reduced&#8221; as a negative &#8220;increased&#8221;.</p>
+    </div>
+
+    <!-- CLUSTER JEWEL -->
+    <div style="border: 1px solid #3b3524; border-radius: 3px; background: #1a1d24; padding: 14px 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div>
+          <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">Tree Jewel &#183; 55373</div>
+          <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 17px; font-weight: 600; line-height: 1.25; color: #ddd06a;">Carrion Creed</div>
+          <div style="font-size: 13px; color: #98a0af;">Large Cluster Jewel</div>
+        </div>
+        <div style="display: flex; gap: 6px; flex-shrink: 0;">
+          <button style="font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 2px; background: #d08b4f; color: #1a1206; border: 1px solid #d08b4f; cursor: pointer;">Search</button>
+          <button style="font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 2px; background: transparent; color: #98a0af; border: 1px solid #2a2f39; cursor: pointer;">Copy</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; margin-top: 11px; font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 12px;">
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div style="color: #9aa4d6;">Adds 8 Passive Skills<span style="display: inline-block; font-family: 'Segoe UI',sans-serif; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid #3b3524; color: #ddd06a; padding: 0 4px; border-radius: 2px; margin-left: 6px; vertical-align: 1px;">Enchant</span></div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #6f7787; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 58px; text-align: right;">8</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #2a2f39;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div style="color: #9aa4d6;">2 Added Passive Skills are Jewel Sockets</div>
+          <div style="display: flex; align-items: center; gap: 4px;"><span style="color: #6f7787; font-size: 11px;">&#8805;</span><div style="font-size: 11.5px; padding: 3px 6px; background: #20242c; border: 1px solid #2a2f39; border-radius: 2px; width: 58px; text-align: right;">2</div></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: start; gap: 8px; padding: 6px 0 4px;">
+          <div style="width: 13px; height: 13px; border-radius: 2px; background: #d08b4f; display: flex; align-items: center; justify-content: center; margin-top: 2px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#1a1206" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+          <div>
+            <div style="color: #9aa4d6;">Added Small Passive Skills grant:</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px; font-family: 'Segoe UI',sans-serif; font-size: 12px; padding: 4px 9px; border-radius: 2px; background: #2b2415; border: 1px solid #6d5426; color: #ddd06a;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ddd06a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Axe Attacks deal 12% increased Damage
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; font-family: 'Segoe UI',sans-serif; font-size: 12px; padding: 4px 9px; border-radius: 2px; background: #2b2415; border: 1px solid #6d5426; color: #ddd06a;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ddd06a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Sword Attacks deal 12% increased Damage
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; font-family: 'Segoe UI',sans-serif; font-size: 12px; padding: 4px 9px; border-radius: 2px; background: #20242c; border: 1px solid #2a2f39; color: #6f7787;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#6f7787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                +3 to Dexterity
+              </div>
+            </div>
+          </div>
+          <div></div>
+        </div>
+      </div>
+
+      <p style="font-size: 12px; color: #6f7787; margin: 10px 0 0;">Small-passive enchants are one stat with an option index &#8212; pick which ones must be on the jewel.</p>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

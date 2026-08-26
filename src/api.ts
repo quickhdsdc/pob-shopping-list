@@ -47,18 +47,18 @@ export async function importFromUrl(url: string): Promise<string> {
   try {
     res = await fetch(`api/import?url=${encodeURIComponent(url.trim())}`);
   } catch {
-    throw new ImportError('链接导入需要联网版才能用，离线单文件版请直接粘贴 PoB 代码');
+    throw new ImportError('Link import needs the hosted version — paste the build code instead.');
   }
 
   let data: { code?: string; error?: string };
   try {
     data = (await res.json()) as { code?: string; error?: string };
   } catch {
-    throw new ImportError(`导入失败（HTTP ${res.status}）`);
+    throw new ImportError(`Import failed (HTTP ${res.status}).`);
   }
 
   if (!res.ok || !data.code) {
-    throw new ImportError(data.error ?? `导入失败（HTTP ${res.status}）`);
+    throw new ImportError(data.error ?? `Import failed (HTTP ${res.status}).`);
   }
   return data.code;
 }

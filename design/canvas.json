@@ -1,0 +1,56 @@
+{
+  "artboards": [
+    {
+      "file": "Landing.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1200,
+      "h": 760,
+      "title": "One page · before you paste"
+    },
+    {
+      "file": "Main.dc.html",
+      "x": 1320,
+      "y": 0,
+      "w": 1200,
+      "h": 1180,
+      "title": "One page · after you paste (scrolls on)"
+    },
+    {
+      "file": "ClusterJewel.dc.html",
+      "x": 0,
+      "y": 900,
+      "w": 900,
+      "h": 860,
+      "is_interactive": true,
+      "title": "Detail · one card from above, zoomed"
+    },
+    {
+      "file": "States.dc.html",
+      "x": 0,
+      "y": 1900,
+      "w": 900,
+      "h": 900,
+      "title": "Reference · how failures look"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "note-direction",
+      "x": 1320,
+      "y": -180,
+      "w": 460,
+      "text": "These are STATES OF ONE PAGE, not separate screens. The app stays a single scrolling page: the controls sit at the top, the item cards grow underneath them.\n\nSame visual vocabulary as the live app - serif item names (matching in-game tooltips), rarity colours, mono mod text, 2-3px radii - translated to English and made denser.\n\nNew here: two-column card grid, a stats strip instead of a run-on sentence, and the cluster-jewel option picker."
+    },
+    {
+      "id": "note-cluster",
+      "x": 950,
+      "y": 900,
+      "w": 340,
+      "text": "Not a separate screen - this is one card from the results page, zoomed in so the interaction is readable.\n\nIt is live: toggle the enchants and flip Require to see the query change. This is the one mod that needs a choice instead of a threshold, and it is why those rows are still red in the shipped app."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

@@ -1,11 +1,12 @@
 /**
  * 界面层：把解析好的装备渲染成卡片，并维护「勾了哪几条、门槛填多少」的状态。
  *
- * 所有查询逻辑都在 core/ 里，这里只负责 DOM 和状态。
+ * 所有查询逻辑都在 core/ 里，这里只负责 DOM 和状态；所有文案在 copy.ts。
  */
 
-import { isUniqueRarity } from './core/items.js';
+import { COPY } from './copy.js';
 import { type BuildItem, type Slot } from './core/build.js';
+import { isUniqueRarity } from './core/items.js';
 import { autoSelect, type Cmp, cmpFor, type FilterRow, type QueryCard, tolValue } from './core/query.js';
 import { matchMod, type StatIndex, stripTag } from './core/stats.js';
 
@@ -33,9 +34,9 @@ export function formatSlot(slot: Slot): string {
     case 'equipment':
       return slot.name;
     case 'tree-jewel':
-      return `天赋树珠宝 ${slot.nodeId}`;
+      return COPY.card.treeJewel(slot.nodeId);
     case 'unequipped':
-      return '（未装备）';
+      return COPY.card.unequipped;
   }
 }
 
@@ -50,8 +51,8 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-function badge(text: string): HTMLSpanElement {
-  return el('span', 'badge', text);
+function badge(text: string, bad = false): HTMLSpanElement {
+  return el('span', bad ? 'badge bad' : 'badge', text);
 }
 
 function renderCard(
@@ -72,7 +73,7 @@ function renderCard(
     rows: [],
   };
 
-  const card = el('div', 'card');
+  const card = el('div', item.baseUnknown ? 'card has-warn' : 'card');
 
   const head = el('div', 'chead');
   const left = el('div');
@@ -82,15 +83,13 @@ function renderCard(
     left.appendChild(el('div', 'ibase', item.base));
   }
   if (item.baseUnknown) {
-    left.appendChild(
-      el('div', 'ibase warn', '底子没认出来，搜索不限定底子（可能是新赛季底子，对照表该更新了）'),
-    );
+    left.appendChild(el('div', 'ibase warn', COPY.card.baseUnknown));
   }
   head.appendChild(left);
 
   const acts = el('div', 'acts');
-  const searchBtn = el('button', undefined, '官网搜索');
-  const copyBtn = el('button', 'sec', '复制');
+  const searchBtn = el('button', undefined, COPY.buttons.search);
+  const copyBtn = el('button', 'sec', COPY.buttons.copy);
   acts.append(searchBtn, copyBtn);
   head.appendChild(acts);
   card.appendChild(head);
@@ -119,12 +118,15 @@ function renderCard(
       tr.appendChild(tdCheck);
 
       const tdText = el('td', 'txt', stripTag(mod.line));
-      if (mod.implicit) tdText.appendChild(badge('植入'));
+      if (mod.implicit) tdText.appendChild(badge(COPY.card.implicit));
       if (!match.id) {
         tdText.classList.add('nomatch');
-        tdText.appendChild(badge('未识别'));
+        tdText.appendChild(badge(COPY.card.noFilter, true));
       }
       tr.appendChild(tdText);
+
+      // 未识别的词条给一句原因，别让人对着红字猜
+      tr.appendChild(el('td', 'reason', match.id ? '' : COPY.card.noFilterReason));
 
       const tdNum = el('td', 'num');
       tdNum.appendChild(el('span', 'cmp', match.id ? (cmp === 'max' ? '≤' : '≥') : ''));
@@ -150,14 +152,9 @@ function renderCard(
     card.appendChild(table);
   }
 
+  const picked = state.rows.filter((r) => r.on).length;
   card.appendChild(
-    el(
-      'p',
-      'hint',
-      isUnique
-        ? '传奇按名字+底子精确搜索，词条默认不勾（勾上可再筛数值范围）'
-        : `默认勾选 ${opts.maxMods} 条（词缀优先于植入），数值已按容差自动填。勾选和数值都可以改。`,
-    ),
+    el('p', 'hint', isUnique ? COPY.card.hintUnique : COPY.card.hintOther(picked)),
   );
 
   searchBtn.addEventListener('click', () => handlers.onSearch(state));
@@ -183,4 +180,29 @@ export function renderCards(
   }
   container.appendChild(frag);
   return states;
+}
+
+export interface Summary {
+  readonly items: number;
+  readonly matched: number;
+  readonly unmatched: number;
+}
+
+/** 统计条：以前是一句流水账，扫一眼看不出识别率 */
+export function renderSummary(container: HTMLElement, s: Summary): void {
+  container.textContent = '';
+  const part = (className: string, n: number, label: string): HTMLElement => {
+    const span = el('span', className);
+    span.appendChild(el('strong', undefined, String(n)));
+    span.append(` ${label}`);
+    return span;
+  };
+  container.append(
+    part('n-items', s.items, COPY.summary.items),
+    el('span', 'sep', '|'),
+    part('n-ok', s.matched, COPY.summary.matched),
+    el('span', 'sep', '|'),
+    part('n-bad', s.unmatched, COPY.summary.unmatched),
+  );
+  container.hidden = false;
 }

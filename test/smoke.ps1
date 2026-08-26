@@ -65,37 +65,49 @@ $harness = @"
 (async function(){
   var out = function(o){ document.getElementById('R').textContent = JSON.stringify(o); };
   try{
-    // 等对照表加载完 —— 加载成功时「生成」按钮会解禁
+    // Wait for the stat tables - the Build button is enabled once they load
     var go = document.getElementById('go');
-    for(var i = 0; i < 200 && go.disabled; i++) await new Promise(function(r){ setTimeout(r, 50); });
-    if(go.disabled) return out({error: 'tables never loaded: ' + document.getElementById('status').textContent});
+    for (var i = 0; i < 200 && go.disabled; i++) await new Promise(function(r){ setTimeout(r, 50); });
+    if (go.disabled) return out({error: 'tables never loaded: ' + document.getElementById('status').textContent});
 
     document.getElementById('code').value = document.getElementById('TC').textContent.trim();
     go.click();
-    for(var j = 0; j < 200 && document.querySelectorAll('.card').length === 0; j++) {
+    for (var j = 0; j < 200 && document.querySelectorAll('.card').length === 0; j++) {
       await new Promise(function(r){ setTimeout(r, 50); });
     }
 
-    var cards = document.querySelectorAll('.card');
-    var urls = 0, badType = 0;
+    // The embedded base table is the authority for checking generated types
     var known = {};
     (await (await fetch('bases.tsv')).text()).split('\n').forEach(function(l){
       var n = l.split('\t')[0];
-      if(n) known[n] = 1;
+      if (n) known[n] = 1;
     });
 
+    var cards = document.querySelectorAll('.card');
+    var urls = 0, badType = 0;
     cards.forEach(function(c){
       var o = window.open, u = null;
       window.open = function(x){ u = x; };
       c.querySelector('.acts button').click();
       window.open = o;
-      if(!u || u.indexOf('https://www.pathofexile.com/trade/search/') !== 0) return;
+      if (!u || u.indexOf('https://www.pathofexile.com/trade/search/') !== 0) return;
       urls++;
       var q = JSON.parse(decodeURIComponent(u.split('?q=')[1])).query;
-      if(q.type && !known[q.type]) badType++;
+      if (q.type && !known[q.type]) badType++;
     });
 
-    out({ cards: cards.length, urls: urls, badType: badType,
+    // The UI is English now - no CJK should survive into the rendered page.
+    var pageText = document.body.innerText;
+    var cjk = 0, cjkSample = "";
+    for (var k = 0; k < pageText.length; k++) {
+      var code = pageText.charCodeAt(k);
+      if (code >= 0x4e00 && code <= 0x9fff) {
+        cjk++;
+        if (!cjkSample) cjkSample = pageText.slice(Math.max(0, k - 20), k + 30);
+      }
+    }
+
+    out({ cards: cards.length, urls: urls, badType: badType, cjk: cjk, cjkSample: cjkSample,
           status: document.getElementById('status').textContent.slice(0, 60) });
   }catch(e){ out({error: String(e)}); }
 })();
@@ -140,12 +152,14 @@ if ($r.error) { throw "页面报错: $($r.error)" }
 Write-Host "渲染出的卡片   : $($r.cards)"
 Write-Host "生成的链接数   : $($r.urls)"
 Write-Host "底子不存在的   : $($r.badType)"
+Write-Host "残留的汉字     : $($r.cjk)$(if ($r.cjk -gt 0) { "  ->  $($r.cjkSample)" })"
 Write-Host "状态栏         : $($r.status)"
 
 $fail = @()
 if ($r.cards -lt 40)      { $fail += "卡片数 < 40" }
 if ($r.urls -ne $r.cards) { $fail += "链接数与卡片数不符" }
 if ($r.badType -ne 0)     { $fail += "有 $($r.badType) 件装备的 type 不是合法底子" }
+if ($r.cjk -ne 0)         { $fail += "界面上还有 $($r.cjk) 个汉字没翻译" }
 
 if ($fail.Count) { Write-Host "`nFAIL: $($fail -join '; ')" -ForegroundColor Red; exit 1 }
 Write-Host "`nPASS" -ForegroundColor Green

@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; background: #13151a;
+      font-family: "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+      font-size: 15px; line-height: 1.5; color: #e3e6eb; }
+    a { color: #d08b4f; } a:hover { color: #e0a06a; }
+  </style>
+</helmet>
+
+<div style="padding: 26px 28px 32px; background: #13151a; min-height: 100%;">
+
+  <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">States</div>
+  <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 20px; font-weight: 600; margin-top: 5px;">Every failure says what to do next</div>
+  <p style="font-size: 13.5px; color: #98a0af; margin: 7px 0 0; max-width: 640px; text-wrap: pretty;">Nothing is ever dropped silently. A mod that cannot be searched stays visible and says why; a search that would return nothing is loosened instead of shipped broken.</p>
+
+  <div style="display: flex; flex-direction: column; gap: 22px; margin-top: 24px;">
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Input</div>
+      <div style="display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 2px; background: #1d1719; border: 1px solid #4a3630;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e07a6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="13"></line><line x1="12" y1="16.5" x2="12" y2="16.5"></line></svg>
+        <span style="font-size: 13.5px; color: #e07a6c;">That doesn&#39;t decode as a Path of Building code. Check you copied the whole string.</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 2px; background: #1d1719; border: 1px solid #4a3630;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e07a6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="13"></line><line x1="12" y1="16.5" x2="12" y2="16.5"></line></svg>
+        <span style="font-size: 13.5px; color: #e07a6c;">poe.ninja links can&#39;t be read from here &#8212; use the <span style="color: #e3e6eb;">Copy build code</span> button on that page instead.</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 2px; background: #1a1d24; border: 1px solid #2a2f39;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d08b4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"></path></svg>
+        <span style="font-size: 13.5px; color: #98a0af;">Fetching the build from pobb.in&#8230;</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Mods that can&#39;t be searched</div>
+      <div style="border: 1px solid #2a2f39; border-radius: 3px; background: #1a1d24; padding: 12px 14px;">
+        <div style="display: flex; flex-direction: column; font-family: 'Cascadia Mono',Consolas,ui-monospace,monospace; font-size: 12px;">
+          <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #2a2f39;">
+            <div style="width: 13px; height: 13px; border-radius: 2px; border: 1px dashed #4a3630; background: #1d1719;"></div>
+            <div style="color: #e07a6c;">Gain 3 Charges when you are Hit by an Enemy<span style="display: inline-block; font-family: 'Segoe UI',sans-serif; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid #4a3630; color: #e07a6c; padding: 0 4px; border-radius: 2px; margin-left: 6px; vertical-align: 1px;">No filter</span></div>
+            <div style="font-family: 'Segoe UI',sans-serif; font-size: 11.5px; color: #6f7787;">not in the trade stat list</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 8px; padding: 5px 0;">
+            <div style="width: 13px; height: 13px; border-radius: 2px; border: 1px dashed #4a3630; background: #1d1719;"></div>
+            <div style="color: #e07a6c;">Curse Enemies with Punishment on Hit<span style="display: inline-block; font-family: 'Segoe UI',sans-serif; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; border: 1px solid #4a3630; color: #e07a6c; padding: 0 4px; border-radius: 2px; margin-left: 6px; vertical-align: 1px;">No filter</span></div>
+            <div style="font-family: 'Segoe UI',sans-serif; font-size: 11.5px; color: #6f7787;">only the &#8220;#% chance to&#8221; form exists</div>
+          </div>
+        </div>
+        <p style="font-size: 12px; color: #6f7787; margin: 9px 0 0;">These stay on the card and out of the query. The other mods still narrow the search.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Base type not recognised</div>
+      <div style="border: 1px solid #2a2f39; border-radius: 3px; background: #1a1d24; padding: 13px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+          <div>
+            <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #6f7787;">Ring 2</div>
+            <div style="font-family: 'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif; font-size: 17px; font-weight: 600; line-height: 1.25; color: #93a0ea;">Beetle Sanguine Ring of the Newt</div>
+            <div style="display: flex; align-items: center; gap: 7px; margin-top: 3px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e07a6c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.5 20h19z"></path><line x1="12" y1="10" x2="12" y2="14"></line><line x1="12" y1="17" x2="12" y2="17"></line></svg>
+              <span style="font-size: 12.5px; color: #e07a6c;">Base type unknown &#8212; searching without it rather than returning nothing</span>
+            </div>
+          </div>
+          <button style="font: inherit; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 2px; background: #d08b4f; color: #1a1206; border: 1px solid #d08b4f; cursor: pointer; flex-shrink: 0;">Search</button>
+        </div>
+        <p style="font-size: 12px; color: #6f7787; margin: 10px 0 0;">Usually a base added this league. The item tables refresh from the official API.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: #98a0af;">Offline single file</div>
+      <div style="display: flex; align-items: center; gap: 9px; padding: 9px 12px; border-radius: 2px; background: #1a1d24; border: 1px solid #2a2f39;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6f7787" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"></path><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"></path><circle cx="12" cy="12" r="10"></circle></svg>
+        <span style="font-size: 13.5px; color: #98a0af;">No server here, so the league list is typed by hand and links can&#39;t be imported. Everything else works.</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

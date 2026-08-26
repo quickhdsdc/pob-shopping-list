@@ -1,40 +1,49 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PoB 配装采购单生成器</title>
-<meta name="description" content="粘贴一段 Path of Building 代码，为每件装备生成一条流放之路交易站搜索链接。">
+<title>PoE Shopping List</title>
+<meta name="description" content="Paste a Path of Building code and get one official trade search per item.">
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1>PoB 配装采购单生成器<small>粘贴 PoB 代码 → 每件装备一条交易站搜索</small></h1>
+  <h1>PoE Shopping List<small>One trade search per item, from any Path of Building code</small></h1>
 </header>
 
-<textarea id="code" spellcheck="false" placeholder="粘贴 Path of Building 导出代码（PoB 里 Import/Export → Generate → 复制那串长字符；poe.ninja 的「Copy build code」也一样）&#10;&#10;也可以直接贴 pobb.in / pastebin 的分享链接。"></textarea>
+<p class="lede">Paste someone else’s build and every item becomes one official trade search, with the
+thresholds already relaxed so you can afford the copy. Nothing is uploaded — the build is decoded in
+your browser.</p>
+
+<textarea id="code" spellcheck="false" placeholder="Paste a Path of Building export code, or a pobb.in / pastebin link&#10;&#10;In PoB: Import/Export → Generate. On poe.ninja: Copy build code."></textarea>
 
 <div class="ctl">
-  <div class="f"><label for="league">赛季</label>
-    <input id="league" value="Allflame" spellcheck="false" list="leagues" autocomplete="off">
+  <div class="f"><label for="league">League</label>
+    <input id="league" value="Standard" spellcheck="false" list="leagues" autocomplete="off">
     <datalist id="leagues"></datalist></div>
-  <div class="f"><label for="st">挂单</label>
+  <div class="f"><label for="st">Listing</label>
     <select id="st">
-      <option value="securable" selected>一口价</option>
-      <option value="available">一口价+当面</option>
-      <option value="onlineleague">在线(本赛季)</option>
-      <option value="online">在线(全部)</option>
-      <option value="any">全部</option>
+      <option value="securable" selected>Buyout</option>
+      <option value="available">Buyout or in person</option>
+      <option value="onlineleague">Online in league</option>
+      <option value="online">Online anywhere</option>
+      <option value="any">Any</option>
     </select></div>
-  <div class="f"><label for="tol">容差 %</label><input id="tol" type="number" value="80" min="10" max="100" step="5"></div>
-  <div class="f"><label for="maxmods">每件最多筛几条</label><input id="maxmods" type="number" value="4" min="1" max="8"></div>
-  <div class="f"><label>&nbsp;</label><button id="go" disabled>生成</button></div>
-  <div class="f"><label>&nbsp;</label><button id="copyall" class="sec">复制全部链接</button></div>
+  <div class="f"><label for="tol">Tolerance %</label><input id="tol" type="number" value="80" min="10" max="100" step="5"></div>
+  <div class="f"><label for="maxmods">Mods per item</label><input id="maxmods" type="number" value="4" min="1" max="8"></div>
+  <div class="f"><label>&nbsp;</label><button id="go" disabled>Build the list</button></div>
+  <div class="f"><label>&nbsp;</label><button id="copyall" class="sec">Copy all links</button></div>
 </div>
-<p id="status">正在加载词条对照表…</p>
 
-<div id="out"><p class="empty">粘贴代码后点「生成」</p></div>
+<p class="hint">Tolerance sets how far below the original roll a search still accepts. 80% turns a
++134 life roll into ≥107.</p>
+
+<p id="status">Loading the stat tables…</p>
+<div id="summary" hidden></div>
+
+<div id="out"><p class="empty">Paste a build code and press <strong>Build the list</strong>.</p></div>
 </div>
 
 <script type="module" src="./main.ts"></script>

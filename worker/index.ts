@@ -87,43 +87,43 @@ async function handleLeagues(): Promise<Response> {
   try {
     res = await upstream(LEAGUES_API);
   } catch {
-    return fail(502, '连不上官网的赛季接口');
+    return fail(502, 'Could not reach the official league API.');
   }
   if (!res.ok) {
     // 429 原样透出去，让前端知道是被限流而不是坏了
-    return fail(res.status === 429 ? 429 : 502, `官网赛季接口返回 ${res.status}`);
+    return fail(res.status === 429 ? 429 : 502, `The official league API returned ${res.status}.`);
   }
 
   let payload: LeaguesPayload;
   try {
     payload = toPayload(await res.json());
   } catch {
-    return fail(502, '官网赛季接口返回的不是预期格式');
+    return fail(502, 'The official league API returned an unexpected shape.');
   }
-  if (payload.leagues.length === 0) return fail(502, '官网赛季接口返回了空列表');
+  if (payload.leagues.length === 0) return fail(502, 'The official league API returned an empty list.');
 
   return json(payload, { ttl: LEAGUES_TTL });
 }
 
 const IMPORT_ERRORS: Record<string, string> = {
-  'bad-url': '这不是一个能识别的分享链接',
-  'not-https': '只支持 https 链接',
-  'unsupported-host': '不认识这个站点，请直接粘贴 PoB 代码',
+  'bad-url': 'That isn’t a share link this understands.',
+  'not-https': 'Only https links are accepted.',
+  'unsupported-host': 'Unknown site — paste the build code instead.',
 };
 
 async function handleImport(url: URL): Promise<Response> {
   const target = url.searchParams.get('url');
-  if (!target) return fail(400, '缺少 url 参数');
+  if (!target) return fail(400, 'Missing url parameter.');
 
   const resolved = resolveImportUrl(target);
   if (!resolved.ok) {
     if (resolved.reason === 'use-code-instead') {
-      return fail(400, `${resolved.host} 取不到原始代码，请用它页面上的「复制代码」按钮`, {
+      return fail(400, `${resolved.host} does not expose the raw code — use its own Copy build code button.`, {
         reason: resolved.reason,
         host: resolved.host,
       });
     }
-    return fail(400, IMPORT_ERRORS[resolved.reason] ?? '无法识别的链接', {
+    return fail(400, IMPORT_ERRORS[resolved.reason] ?? 'Unrecognised link.', {
       reason: resolved.reason,
     });
   }
@@ -132,12 +132,12 @@ async function handleImport(url: URL): Promise<Response> {
   try {
     res = await upstream(resolved.fetchUrl);
   } catch {
-    return fail(502, `连不上 ${resolved.source}`);
+    return fail(502, `Could not reach ${resolved.source}.`);
   }
-  if (!res.ok) return fail(res.status === 404 ? 404 : 502, `${resolved.source} 返回 ${res.status}`);
+  if (!res.ok) return fail(res.status === 404 ? 404 : 502, `${resolved.source} returned ${res.status}.`);
 
   const code = await findPobCode(await readCapped(res));
-  if (!code) return fail(422, `从 ${resolved.source} 取回的内容里没找到 PoB 代码`);
+  if (!code) return fail(422, `No Path of Building code found at that ${resolved.source} link.`);
 
   return json({ code, source: resolved.source }, { ttl: IMPORT_TTL });
 }
@@ -152,7 +152,7 @@ export default {
     // HEAD 跟 GET 走同一条路 —— 浏览器、监控探针和各种代理都会发 HEAD，
     // 运行时会自己把响应体去掉。
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      return fail(405, '只支持 GET');
+      return fail(405, 'Only GET is supported.');
     }
 
     // 边缘缓存：赛季接口有 IP 限流，同一个 Worker 上所有用户共用出口 IP，
@@ -165,7 +165,7 @@ export default {
     let response: Response;
     if (url.pathname === '/api/leagues') response = await handleLeagues();
     else if (url.pathname === '/api/import') response = await handleImport(url);
-    else return fail(404, '没有这个端点');
+    else return fail(404, 'No such endpoint.');
 
     if (response.ok) ctx.waitUntil(cache.put(cacheKey, response.clone()));
     return response;
