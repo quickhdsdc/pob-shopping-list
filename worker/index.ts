@@ -15,7 +15,7 @@ import { LEAGUES_API, type LeaguesPayload, toPayload } from './leagues.js';
 
 /** GGG 的 API 政策要求带一个能认出是谁的 User-Agent */
 const USER_AGENT =
-  'pob-shopping-list/0.2 (+https://pob-shopping-list.pob-shopping-list.workers.dev)';
+  'poe-shopping-list/0.2 (+https://poe-shopping-list.pob-shopping-list.workers.dev)';
 
 const LEAGUES_TTL = 3600;
 const IMPORT_TTL = 600;
