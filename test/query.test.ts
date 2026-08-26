@@ -110,6 +110,22 @@ describe('查询组装', () => {
     expect(q.type).toBeUndefined();
   });
 
+  it('同一个 id 只出现一次', () => {
+    // 星团珠宝的一条小点词缀在交易站是一条 stat、两行文本，物品上是分开的
+    // 两行，两行都会匹配到它。重复的筛选交易站会当成「要有两条这个词条」，
+    // 直接搜不到东西。
+    const card: QueryCard = {
+      ...base, rarity: 'RARE',
+      rows: [
+        { on: true, id: 'enchant.stat_3948993189|1', cmp: 'min', value: null },
+        { on: true, id: 'enchant.stat_3948993189|1', cmp: 'min', value: null },
+        { on: true, id: 'explicit.stat_other', cmp: 'min', value: 5 },
+      ],
+    };
+    const f = buildQuery(card, 'securable').query.stats[0].filters;
+    expect(f.map((x) => x.id)).toEqual(['enchant.stat_3948993189|1', 'explicit.stat_other']);
+  });
+
   it('没勾的行和没匹配上的行都不进筛选', () => {
     const card: QueryCard = {
       ...base, rarity: 'RARE',

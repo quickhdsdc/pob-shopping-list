@@ -68,7 +68,7 @@ const xml = new TextDecoder().decode(await new Response(stream).arrayBuffer());
 
 ### 2. 词条文本 → 交易站 stat id
 
-这是唯一有难度的一环。内嵌了 7,980 条对照表（`data/stat-lut.tsv`，直接从官方 `api/trade/data/stats` 提取），**三级匹配**：
+这是唯一有难度的一环。内嵌了 9,924 条对照表（`data/stat-lut.tsv`，直接从官方 `api/trade/data/stats` 提取），**三级匹配**：
 
 | 级别 | 做法                       | 解决的问题                                                      |
 | ---- | -------------------------- | --------------------------------------------------------------- |
@@ -129,8 +129,8 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
 ```
 装备数        : 44
 稀有/魔法词条 : 149
-未识别        : 12
-识别率        : 92%
+未识别        : 4
+识别率        : 97%
 生成的链接数  : 44
 ```
 
@@ -176,9 +176,10 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
 
 ## 已知限制
 
-- **星团珠宝的小点词缀**（`Added Small Passive Skills grant: ...`）识别不了。
-  它们的 id 带选项索引（`enchant.stat_3948993189|49`，索引表示具体是哪一条小点词缀），
-  需要界面上能选，提取时直接跳过了。**这是下一步最值得补的一块。**
+- 剩下认不出来的是交易站的 stat 列表里**确实没有对应文本**的那几条，比如药剂的
+  `Gain # Charges when you are Hit by an Enemy`、必定触发版的
+  `Curse Enemies with Punishment on Hit`（列表里只有 `#% chance to` 那版）。
+  这些不是匹配缺陷，是交易站本身搜不了。
 - **传奇的多行词条**会被拆成两行导致识别失败 —— 无影响，传奇按名字搜。
 - **链接导入只支持 pobb.in 和 pastebin**。poe.ninja / pob.cool / poeplanner / maxroll
   这些站取不到原始代码，界面上会提示去点它们自己的「复制代码」按钮。
@@ -199,7 +200,7 @@ npm install
 
 npm run dev              # 前端开发服务器（没有 /api，赛季和链接导入自动降级）
 npm run worker:dev       # 连 Worker 一起跑，本地就有 /api/leagues 和 /api/import
-npm test                 # 单元 + 集成测试（113 个用例，不需要浏览器）
+npm test                 # 单元 + 集成测试（117 个用例，不需要浏览器）
 npm run build            # 产出 dist/
 npm run build:single     # 再把一切压成根目录的 index.html
 npm run deploy           # 部署到 Cloudflare（需要先 wrangler login）
@@ -248,7 +249,7 @@ npm run test:offline     # 单文件版在 file:// 下能不能跑起来（需�
 │   ├── leagues.ts              # 赛季列表
 │   └── import.ts               # 分享链接 -> PoB 代码（含域名白名单）
 ├── data/
-│   ├── stat-lut.tsv            # 词条文本 -> stat hash + 命名空间（7,980 条）
+│   ├── stat-lut.tsv            # 词条文本 -> stat hash + 命名空间（9,924 条）
 │   └── bases.tsv               # 底子物品名 -> 类别（1,088 条）
 ├── tools/
 │   ├── extract-lut.mjs         # 从官方 api/trade/data/stats 重建词条表

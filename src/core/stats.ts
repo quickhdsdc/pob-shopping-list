@@ -131,14 +131,19 @@ const NO_MATCH: ModMatch = { id: null, value: null };
 
 /**
  * 在对照表里查一条词条，按可信度从高到低试：
- * 归一化原文 -> 原文 -> 补 (Local) 后缀 -> 规范键 -> 规范键补 local -> 单复数容错
+ * 原文 -> 归一化原文 -> 补 (Local) 后缀 -> 规范键 -> 规范键补 local -> 单复数容错
+ *
+ * 原文精确匹配排在归一化前面，是因为星团珠宝那批带选项索引的词条里，
+ * 同一个效果有多个数值版本（10% / 12% increased Attack Damage 是不同的选项），
+ * 归一化之后它们是同一个键，先归一化就会挑错选项 —— 而挑错的 id 在交易站上
+ * 一样不报错，只是搜出来的东西不对。
  */
 function lookupExact(index: StatIndex, raw: string): StatEntry | null {
   const norm = normalizeNumbers(raw);
   const key = canonicalKey(raw);
   const tries = [
-    index.byNorm.get(norm),
     index.byRaw.get(raw),
+    index.byNorm.get(norm),
     index.byNorm.get(norm + LOCAL_SUFFIX),
     index.byKey.get(key),
     index.byKey.get(key + 'local'),

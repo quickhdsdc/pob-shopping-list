@@ -30,6 +30,13 @@ const NAMESPACES = ['explicit', 'implicit', 'fractured', 'enchant', 'crafted'];
  */
 const MAX_TEXT_LENGTH = 110;
 
+/**
+ * hash 可以带选项索引：`enchant.stat_3948993189|33` 是星团珠宝的一条小点词缀。
+ * 这类**不是**「一个 stat 配一个下拉框」—— 每条的 text 本身就是完整文本，
+ * 当普通词条收就行，界面上不需要任何额外交互。
+ */
+const STAT_ID = /^([a-z]+)\.stat_(\d+(?:\|\d+)*)$/;
+
 const res = await fetch(STATS_API, { headers: { 'user-agent': USER_AGENT } });
 if (!res.ok) throw new Error(`官方接口返回 ${res.status}`);
 const body = await res.json();
@@ -38,31 +45,40 @@ const body = await res.json();
 const byText = new Map();
 let total = 0;
 let skippedOption = 0;
+let multiLine = 0;
 
 for (const group of body.result ?? []) {
   for (const entry of group.entries ?? []) {
     total++;
     const { id, text } = entry;
     if (typeof id !== 'string' || typeof text !== 'string' || !text) continue;
-    if (text.length > MAX_TEXT_LENGTH) continue;
 
-    // 带选项索引的（enchant.stat_3948993189|49，索引表示具体是哪条星团小点
-    // 词缀）需要界面上能选，暂不支持。entry.option 也是同一类东西。
-    if (id.includes('|') || entry.option) {
+    // 真正带下拉选项的（entry.option 是一个候选列表）需要界面上能选具体哪一项。
+    // 实测这 88 条全是 pseudo.*，本来就在我们要的命名空间之外。
+    if (entry.option) {
       skippedOption++;
       continue;
     }
 
-    const m = /^([a-z]+)\.stat_(\d+)$/.exec(id);
+    const m = STAT_ID.exec(id);
     if (!m) continue;
     const [, ns, hash] = m;
     if (!NAMESPACES.includes(ns)) continue;
 
-    let byHash = byText.get(text);
-    if (!byHash) byText.set(text, (byHash = new Map()));
-    const set = byHash.get(hash) ?? new Set();
-    set.add(ns);
-    byHash.set(hash, set);
+    // 有些词条的 text 是多行的：一条小点词缀同时给陷阱和地雷伤害，交易站记成
+    // 一条 stat、两行文本，而 PoB 的物品文本里是分开的两行。每行都当作这个 id
+    // 的别名收进去，两行才都认得出来（TSV 也塞不下换行）。
+    const lines = text.split('\n');
+    if (lines.length > 1) multiLine++;
+    for (const line of lines) {
+      const key = line.trim();
+      if (!key || key.length > MAX_TEXT_LENGTH) continue;
+      let byHash = byText.get(key);
+      if (!byHash) byText.set(key, (byHash = new Map()));
+      const set = byHash.get(hash) ?? new Set();
+      set.add(ns);
+      byHash.set(hash, set);
+    }
   }
 }
 
@@ -86,8 +102,11 @@ lines.sort();
 await writeFile(OUT, lines.join('\n') + '\n', 'utf8');
 
 const withEnchant = lines.filter((l) => l.split('\t')[2].includes('enchant')).length;
+const withOptionIndex = lines.filter((l) => l.split('\t')[1].includes('|')).length;
 console.log(`已写出 ${OUT}`);
 console.log(`  官方 stat 总数：${total}`);
-console.log(`  跳过（带选项索引）：${skippedOption}`);
+console.log(`  跳过（带下拉选项）：${skippedOption}`);
+console.log(`  多行文本拆成别名：${multiLine}`);
 console.log(`  写出条目：${lines.length}`);
 console.log(`  其中含 enchant：${withEnchant}`);
+console.log(`  其中带选项索引：${withOptionIndex}`);

@@ -96,8 +96,13 @@ export interface TradeQuery {
 
 export function buildQuery(card: QueryCard, status: TradeStatus): TradeQuery {
   const filters: StatFilter[] = [];
+  // 同一个 id 只能出现一次：星团珠宝的一条小点词缀在交易站是一条 stat、
+  // 两行文本（陷阱伤害 + 地雷伤害），物品上是分开的两行，两行都会匹配到它。
+  // 重复的筛选交易站会当成「要有两条这个词条」，直接搜不到东西。
+  const seen = new Set<string>();
   for (const r of card.rows) {
-    if (!r.on || !r.id) continue;
+    if (!r.on || !r.id || seen.has(r.id)) continue;
+    seen.add(r.id);
     const f: StatFilter = { id: r.id, disabled: false };
     if (r.value !== null && Number.isFinite(r.value)) {
       f.value = r.cmp === 'max' ? { max: r.value } : { min: r.value };

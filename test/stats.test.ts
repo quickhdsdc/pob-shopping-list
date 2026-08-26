@@ -128,6 +128,46 @@ describe('对照表匹配', () => {
     expect(m.value).toBe(85);
   });
 
+  it('星团珠宝的小点词缀：带选项索引的 id', () => {
+    // 这两条曾经标红说识别不了 —— 提取时把所有带 | 的 id 全跳过了。
+    // 它们其实不需要任何额外交互：text 本身就是完整文本。
+    const trap = matchMod(idx, {
+      line: 'Added Small Passive Skills grant: 12% increased Trap Damage',
+      implicit: true,
+    });
+    expect(trap.id).toBe('enchant.stat_3948993189|33');
+    expect(trap.value).toBeNull();   // 数值烤进选项里了，没有门槛可调
+  });
+
+  it('多行 stat 的每一行都认得，且指向同一个 id', () => {
+    // 一条小点词缀同时给陷阱和地雷伤害，交易站记成一条 stat、两行文本，
+    // 物品文本里却是分开的两行
+    const mine = matchMod(idx, {
+      line: 'Added Small Passive Skills grant: 12% increased Mine Damage',
+      implicit: true,
+    });
+    expect(mine.id).toBe('enchant.stat_3948993189|33');
+
+    const axe = matchMod(idx, {
+      line: 'Added Small Passive Skills grant: Axe Attacks deal 12% increased Damage with Hits and Ailments',
+      implicit: true,
+    });
+    const sword = matchMod(idx, {
+      line: 'Added Small Passive Skills grant: Sword Attacks deal 12% increased Damage with Hits and Ailments',
+      implicit: true,
+    });
+    expect(axe.id).toBe(sword.id);
+  });
+
+  it('原文精确匹配排在归一化前面', () => {
+    // 小点词缀里同一效果有多个数值版本，归一化之后是同一个键。
+    // 先归一化就会挑错选项 —— 而挑错的 id 在交易站上一样不报错。
+    const raw = 'Added Small Passive Skills grant: 10% increased Attack Damage';
+    const m = matchMod(idx, { line: raw, implicit: true });
+    const entry = idx.entries[idx.byRaw.get(raw)!]!;
+    expect(m.id).toBe(`enchant.stat_${entry.hash}`);
+  });
+
   it('对照表里带「#% chance to」前缀的，写死 100% 的那版认不出来', () => {
     // 已知缺口，不是回归：手套上的 `Curse Enemies with Punishment on Hit` 是
     // 必定触发版，对照表里只有 `#% chance to Curse Enemies with Punishment on Hit`。
