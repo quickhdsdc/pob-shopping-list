@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pob-shopping-list",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-09-01",
+
+  // dist/ 是 vite build 的产物。静态资源优先命中，
+  // 命不中才轮到 worker/index.ts —— 也就是只有 /api/* 会进 Worker。
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

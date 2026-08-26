@@ -1,0 +1,10 @@
+// Worker 跑在 workerd 里，没有 DOM，全局类型是另一套。
+// 主 tsconfig 带 DOM lib，两者的 fetch / Response 声明会打架，所以分开。
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": ["worker"]
+}
