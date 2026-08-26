@@ -11,3 +11,10 @@
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Node / 构建
+node_modules/
+dist/
+
+# Wrangler 本地状态
+.wrangler/

@@ -4,111 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PoB 配装采购单生成器</title>
-<style>
-  :root{
-    --bg:#e9eaee; --panel:#f5f6f8; --panel-2:#eceef2;
-    --ink:#191c22; --muted:#5d6473; --faint:#868d9c; --line:#ccd1d9;
-    --unique:#8d5117; --rare:#6f5f0c; --magic:#33409e; --normal:#4a4f5a;
-    --modtext:#464f8c; --accent:#8d5117; --accent-ink:#fff;
-    --ok:#2f6b46; --bad:#9c3025;
-  }
-  @media (prefers-color-scheme:dark){
-    :root{
-      --bg:#13151a; --panel:#1a1d24; --panel-2:#20242c;
-      --ink:#e3e6eb; --muted:#98a0af; --faint:#6f7787; --line:#2a2f39;
-      --unique:#d08b4f; --rare:#ddd06a; --magic:#93a0ea; --normal:#b6bcc7;
-      --modtext:#9aa4d6; --accent:#d08b4f; --accent-ink:#1a1206;
-      --ok:#6cc08d; --bad:#e07a6c;
-    }
-  }
-  *{box-sizing:border-box}
-  body{background:var(--bg); color:var(--ink); margin:0;
-    font-family:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
-    font-size:15px; line-height:1.5;}
-  .wrap{max-width:1000px; margin:0 auto; padding:0 20px 80px}
-  header{border-bottom:1px solid var(--line); padding:22px 0 16px; margin-bottom:24px}
-  h1{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-     font-size:26px; margin:0 0 4px; font-weight:600}
-  h1 small{display:block; font-size:12px; font-weight:400; letter-spacing:.14em;
-     text-transform:uppercase; color:var(--faint); margin-top:6px; font-family:inherit}
-
-  textarea{width:100%; min-height:96px; font-family:"Cascadia Mono",Consolas,monospace;
-    font-size:12px; padding:10px; border:1px solid var(--line); border-radius:3px;
-    background:var(--panel); color:var(--ink); resize:vertical}
-  .ctl{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:flex-end; margin:14px 0}
-  .f{display:flex; flex-direction:column; gap:4px}
-  .f label{font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--muted)}
-  input,select{font:inherit; font-size:14px; padding:6px 9px; background:var(--panel);
-    color:var(--ink); border:1px solid var(--line); border-radius:2px}
-  input[type=number]{width:78px}
-  #league{width:150px}
-  button{font:inherit; font-size:13px; font-weight:600; padding:8px 16px; cursor:pointer;
-    border-radius:2px; background:var(--accent); color:var(--accent-ink); border:1px solid var(--accent)}
-  button:hover{filter:brightness(1.08)}
-  button.sec{background:transparent; color:var(--muted); border-color:var(--line); font-weight:400}
-  button.sec:hover{color:var(--ink); border-color:var(--accent)}
-  :focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-
-  #status{font-size:13px; color:var(--muted); margin:10px 0 0; min-height:20px}
-  #status.err{color:var(--bad)}
-  #status.ok{color:var(--ok)}
-
-  .card{border:1px solid var(--line); border-radius:3px; background:var(--panel);
-    padding:14px 16px; margin-bottom:12px}
-  .chead{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap}
-  .slot{font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint)}
-  .iname{font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
-    font-size:17px; font-weight:600; line-height:1.25}
-  .U{color:var(--unique)} .R{color:var(--rare)} .M{color:var(--magic)} .N{color:var(--normal)}
-  .ibase{font-size:13px; color:var(--muted)}
-  .acts{display:flex; gap:6px; align-items:center; flex-shrink:0}
-
-  table.mods{width:100%; border-collapse:collapse; margin-top:11px;
-    font-family:"Cascadia Mono",Consolas,monospace; font-size:12px}
-  table.mods td{padding:3px 6px 3px 0; vertical-align:middle; border-top:1px solid var(--line)}
-  table.mods tr:first-child td{border-top:none}
-  td.txt{color:var(--modtext); width:100%}
-  td.txt.off{color:var(--faint); text-decoration:line-through}
-  td.txt.nomatch{color:var(--bad); text-decoration:none}
-  td.num input{width:66px; font-size:11.5px; padding:3px 5px; font-family:inherit}
-  .badge{display:inline-block; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
-    border:1px solid var(--line); color:var(--faint); padding:0 4px; border-radius:2px; margin-left:6px;
-    font-family:"Segoe UI",sans-serif; vertical-align:1px}
-  .hint{font-size:12px; color:var(--faint); margin:9px 0 0}
-  details{margin-top:10px}
-  summary{cursor:pointer; font-size:12px; color:var(--muted)}
-  .empty{color:var(--faint); font-size:14px; padding:30px 0; text-align:center}
-</style>
-</head>
-<body>
-<div class="wrap">
-<header>
-  <h1>PoB 配装采购单生成器<small>粘贴 PoB 代码 → 每件装备一条交易站搜索</small></h1>
-</header>
-
-<textarea id="code" spellcheck="false" placeholder="粘贴 Path of Building 导出代码（PoB 里 Import/Export → Generate → 复制那串长字符）&#10;&#10;pobb.in / pob.cool 的链接不行 —— 浏览器跨域拿不到，请粘贴代码本身。"></textarea>
-
-<div class="ctl">
-  <div class="f"><label for="league">赛季</label><input id="league" value="Allflame" spellcheck="false"></div>
-  <div class="f"><label for="st">挂单</label>
-    <select id="st">
-      <option value="securable" selected>一口价</option>
-      <option value="available">一口价+当面</option>
-      <option value="onlineleague">在线(本赛季)</option>
-      <option value="online">在线(全部)</option>
-      <option value="any">全部</option>
-    </select></div>
-  <div class="f"><label for="tol">容差 %</label><input id="tol" type="number" value="80" min="10" max="100" step="5"></div>
-  <div class="f"><label for="maxmods">每件最多筛几条</label><input id="maxmods" type="number" value="4" min="1" max="8"></div>
-  <div class="f"><label>&nbsp;</label><button id="go">生成</button></div>
-  <div class="f"><label>&nbsp;</label><button id="copyall" class="sec">复制全部链接</button></div>
-</div>
-<p id="status"></p>
-
-<div id="out"><p class="empty">粘贴代码后点「生成」</p></div>
-</div>
-
-<script id="lut" type="text/plain">
+<meta name="description" content="粘贴一段 Path of Building 代码，为每件装备生成一条流放之路交易站搜索链接。">
+  <script id="lut" type="text/plain">
 # Added Passive Skills are Jewel Sockets	4079888060
 # Cold Damage taken per second per Frenzy Charge while moving	1528823952
 # Dexterity per 1 Dexterity on Allocated Passives in Radius	172076472
@@ -7840,289 +7737,1161 @@ Zealotry has #% increased Aura Effect	4096052153
 Zealotry has #% increased Mana Reservation Efficiency	168308685
 Zealotry has #% reduced Reservation	478612089
 Zealotry has no Reservation	1741242318
+
 </script>
-<script>
-(function(){
-'use strict';
+<script id="bases" type="text/plain">
+Abyssal Axe	Two Handed Axe	
+Abyssal Sceptre	Sceptre	
+Accumulator Wand	Wand	
+Aegis Tulgraft	Graft	
+Aetherwind Gloves	Gloves	Energy Shield
+Agate Amulet	Amulet	
+Alder Spiked Shield	Shield	Evasion/Energy Shield
+Alloyed Spiked Shield	Shield	Evasion/Energy Shield
+Alternating Sceptre	Sceptre	
+Amber Amulet	Amulet	
+Ambush Boots	Boots	Evasion/Energy Shield
+Ambush Mitts	Gloves	Evasion/Energy Shield
+Ambusher	Dagger	
+Amethyst Flask	Flask	Utility
+Amethyst Ring	Ring	
+Anarchic Spiritblade	One Handed Sword	
+Ancestral Club	One Handed Mace	
+Ancient Gauntlets	Gloves	Armour
+Ancient Greaves	Boots	Armour
+Ancient Mask	Helmet	Evasion/Energy Shield
+Ancient Spirit Shield	Shield	Energy Shield
+Ancient Sword	One Handed Sword	
+Angelic Kite Shield	Shield	Armour/Energy Shield
+Antique Gauntlets	Gloves	Armour
+Antique Greaves	Boots	Armour
+Antique Rapier	One Handed Sword	Thrusting
+Ape Talisman	Amulet	Talisman
+Apex Cleaver	Two Handed Axe	
+Apex Rapier	One Handed Sword	Thrusting
+Apothecary's Gloves	Gloves	Armour/Energy Shield
+Apprentice Gloves	Gloves	Evasion
+Aquamarine Flask	Flask	Utility
+Arcane Vestment	Body Armour	Energy Shield
+Arcanist Gloves	Gloves	Energy Shield
+Arcanist Slippers	Boots	Energy Shield
+Archdemon Crown	Helmet	Armour/Energy Shield
+Archon Kite Shield	Shield	Armour/Energy Shield
+Arena Plate	Body Armour	Armour
+Arming Axe	One Handed Axe	
+Artillery Quiver	Quiver	
+Ashbark Tincture	Tincture	
+Ashscale Talisman	Amulet	Talisman
+Assassin Bow	Bow	
+Assassin's Boots	Boots	Evasion/Energy Shield
+Assassin's Garb	Body Armour	Evasion
+Assassin's Mitts	Gloves	Evasion/Energy Shield
+Assembled Eye Jewel	Jewel	Abyss
+Assembler Wand	Wand	
+Astral Leather	Body Armour	Evasion
+Astral Plate	Body Armour	Armour
+Astrolabe Amulet	Amulet	
+Atonement Mask	Helmet	Armour/Evasion
+Auric Mace	One Handed Mace	
+Aventail Helmet	Helmet	Armour/Energy Shield
+Avian Twins Talisman	Amulet	Talisman
+Avian Twins Talisman (Cold-To-Fire)	Amulet	Talisman
+Avian Twins Talisman (Cold-To-Lightning)	Amulet	Talisman
+Avian Twins Talisman (Fire-To-Cold)	Amulet	Talisman
+Avian Twins Talisman (Fire-To-Lightning)	Amulet	Talisman
+Avian Twins Talisman (Lightning-To-Cold)	Amulet	Talisman
+Awl	Claw	
+Banishing Blade	Two Handed Sword	
+Barbed Club	One Handed Mace	
+Barbute Helmet	Helmet	Armour
+Baroque Round Shield	Shield	Armour/Evasion
+Basalt Flask	Flask	Utility
+Baselard	One Handed Sword	
+Basemetal Treads	Boots	Armour
+Basket Rapier	One Handed Sword	Thrusting
+Bastard Sword	Two Handed Sword	
+Battered Foil	One Handed Sword	Thrusting
+Battered Helm	Helmet	Armour/Evasion
+Battering Uulgraft	Graft	
+Battery Staff	Staff	
+Battle Buckler	Shield	Evasion
+Battle Hammer	One Handed Mace	
+Battle Lamellar	Body Armour	Armour/Evasion
+Battle Plate	Body Armour	Armour
+Battle Sword	One Handed Sword	
+Behemoth Mace	One Handed Mace	
+Bismuth Flask	Flask	Utility
+Black Maw Talisman	Amulet	Talisman
+Black Widow Talisman	Amulet	Talisman
+Bladed Mace	One Handed Mace	
+Blasting Blade	Two Handed Sword	
+Blasting Wand	Wand	
+Blazing Arrow Quiver	Quiver	
+Blinder	Claw	
+Blizzard Crown	Helmet	Evasion/Energy Shield
+Blood Raiment	Body Armour	Evasion/Energy Shield
+Blood Sap Tincture	Tincture	
+Blood Sceptre	Sceptre	
+Blood Viper Talisman	Amulet	Talisman
+Blue Pearl Amulet	Amulet	
+Blunt Arrow Quiver	Quiver	
+Blunt Force Condenser	Two Handed Mace	
+Boarding Axe	One Handed Axe	
+Bone Armour	Body Armour	Evasion/Energy Shield
+Bone Bow	Bow	
+Bone Circlet	Helmet	Energy Shield
+Bone Helmet	Helmet	Armour/Energy Shield
+Bone Ring	Ring	
+Bone Spirit Shield	Shield	Energy Shield
+Bonespire Talisman	Amulet	Talisman
+Boom Mace	One Handed Mace	
+Boot Blade	Dagger	Rune Dagger
+Boot Knife	Dagger	Rune Dagger
+Borealwood Tincture	Tincture	
+Branded Kite Shield	Shield	Armour/Energy Shield
+Brass Maul	Two Handed Mace	
+Brass Spirit Shield	Shield	Energy Shield
+Breach Ring	Ring	
+Breakrib Talisman	Amulet	Talisman
+Brimstone Treads	Boots	Armour
+Broad Axe	One Handed Axe	
+Broad Sword	One Handed Sword	
+Broadhead Arrow Quiver	Quiver	
+Bronze Gauntlets	Gloves	Armour
+Bronze Plate	Body Armour	Armour
+Bronze Sceptre	Sceptre	
+Bronze Tower Shield	Shield	Armour
+Bronzescale Boots	Boots	Armour/Evasion
+Bronzescale Gauntlets	Gloves	Armour/Evasion
+Buckskin Tower Shield	Shield	Armour
+Buckskin Tunic	Body Armour	Evasion
+Burnished Foil	One Handed Sword	Thrusting
+Burnished Spiked Shield	Shield	Evasion/Energy Shield
+Butcher Axe	One Handed Axe	
+Butcher Knife	Dagger	Rune Dagger
+Butcher Sword	Two Handed Sword	
+Cabalist Regalia	Body Armour	Energy Shield
+Calling Wand	Wand	
+Callous Mask	Helmet	Evasion/Energy Shield
+Capacity Rod	Staff	Warstaff
+Capricious Spiritblade	One Handed Sword	
+Cardinal Round Shield	Shield	Armour/Evasion
+Carnal Armour	Body Armour	Evasion/Energy Shield
+Carnal Boots	Boots	Evasion/Energy Shield
+Carnal Mitts	Gloves	Evasion/Energy Shield
+Carnal Sceptre	Sceptre	
+Carrion Queen Talisman	Amulet	Talisman
+Carved Wand	Wand	
+Carving Knife	Dagger	Rune Dagger
+Cat's Paw	Claw	
+Cedar Tower Shield	Shield	Armour
+Ceremonial Axe	One Handed Axe	
+Ceremonial Kite Shield	Shield	Armour/Energy Shield
+Ceremonial Mace	One Handed Mace	
+Cerulean Ring	Ring	
+Chain Belt	Belt	
+Chain Boots	Boots	Armour/Energy Shield
+Chain Gloves	Gloves	Armour/Energy Shield
+Chain Hauberk	Body Armour	Armour/Energy Shield
+Chainmail Doublet	Body Armour	Armour/Energy Shield
+Chainmail Tunic	Body Armour	Armour/Energy Shield
+Chainmail Vest	Body Armour	Armour/Energy Shield
+Champion Kite Shield	Shield	Armour/Energy Shield
+Charan's Sword	One Handed Sword	
+Chest Splitter	One Handed Axe	
+Chestplate	Body Armour	Armour
+Chieftain Talisman	Amulet	Talisman
+Chimeral Talisman	Amulet	Talisman
+Chimerascale Boots	Boots	Armour/Evasion
+Chimerascale Gauntlets	Gloves	Armour/Evasion
+Chiming Spirit Shield	Shield	Energy Shield
+Chrysalis Talisman	Amulet	Talisman
+Citadel Bow	Bow	
+Citrine Amulet	Amulet	
+Clasped Boots	Boots	Evasion/Energy Shield
+Clasped Mitts	Gloves	Evasion/Energy Shield
+Cleaver	One Handed Axe	
+Close Helmet	Helmet	Armour
+Cloth Belt	Belt	
+Cloudwhisper Boots	Boots	Evasion
+Clutching Talisman	Amulet	Talisman
+Cobalt Jewel	Jewel	
+Cobra Talisman	Amulet	Talisman
+Cogwork Ring	Ring	
+Coiled Staff	Staff	Warstaff
+Coiled Wand	Wand	
+Cold-attuned Buckler	Shield	Evasion
+Colossal Hybrid Flask	Flask	Hybrid
+Colossal Life Flask	Flask	Life
+Colossal Mana Flask	Flask	Mana
+Colossal Tower Shield	Shield	Armour
+Colosseum Plate	Body Armour	Armour
+Colossus Mallet	Two Handed Mace	
+Commander's Brigandine	Body Armour	Armour/Evasion
+Composite Bow	Bow	
+Composite Ring	Ring	
+Compound Bow	Bow	
+Compound Spiked Shield	Shield	Evasion/Energy Shield
+Conductive Quiver	Quiver	
+Cone Helmet	Helmet	Armour
+Congregator Wand	Wand	
+Conjurer Boots	Boots	Energy Shield
+Conjurer Gloves	Gloves	Energy Shield
+Conjurer's Vestment	Body Armour	Energy Shield
+Conqueror's Helmet	Helmet	Armour
+Conquest Chainmail	Body Armour	Armour/Energy Shield
+Conquest Helmet	Helmet	Armour/Evasion
+Conquest Lamellar	Body Armour	Armour/Evasion
+Convening Wand	Wand	
+Convoking Wand	Wand	
+Copper Kris	Dagger	Rune Dagger
+Copper Plate	Body Armour	Armour
+Copper Sword	One Handed Sword	
+Copper Tower Shield	Shield	Armour
+Coral Amulet	Amulet	
+Coral Ring	Ring	
+Cord Belt	Belt	
+Coronal Leather	Body Armour	Evasion
+Coronal Maul	Two Handed Mace	
+Corroded Blade	Two Handed Sword	
+Corroded Tower Shield	Shield	Armour
+Corrugated Buckler	Shield	Evasion
+Corsair Sword	One Handed Sword	
+Corundum Flask	Flask	Utility
+Corvine Charm	Jewel	Charm
+Courtesan Sword	One Handed Sword	Thrusting
+Crack Mace	One Handed Mace	
+Craicic Talisman	Amulet	Talisman
+Crescent Staff	Staff	
+Crested Tower Shield	Shield	Armour
+Crimson Jewel	Jewel	
+Crimson Raiment	Body Armour	Evasion/Energy Shield
+Crimson Round Shield	Shield	Armour/Evasion
+Croaker Talisman	Amulet	Talisman
+Crude Bow	Bow	
+Crusader Boots	Boots	Armour/Energy Shield
+Crusader Buckler	Shield	Evasion
+Crusader Chainmail	Body Armour	Armour/Energy Shield
+Crusader Gloves	Gloves	Armour/Energy Shield
+Crusader Helmet	Helmet	Armour/Energy Shield
+Crusader Plate	Body Armour	Armour
+Crushing Force Magnifier	Two Handed Mace	
+Cryonic Ring	Ring	
+Crypt Armour	Body Armour	Evasion/Energy Shield
+Crystal Belt	Belt	
+Crystal Sceptre	Sceptre	
+Crystal Wand	Wand	
+Cured Quiver	Quiver	
+Curved Blade	Two Handed Sword	
+Cutlass	One Handed Sword	
+Cutthroat's Garb	Body Armour	Evasion
+Dagger Axe	Two Handed Axe	
+Darksteel Treads	Boots	Armour
+Darkwood Sceptre	Sceptre	
+Deadhand Talisman	Amulet	Talisman
+Death Bow	Bow	
+Decimation Bow	Bow	
+Decorative Axe	One Handed Axe	
+Decurve Bow	Bow	
+Deep One Talisman	Amulet	Talisman
+Deerskin Boots	Boots	Evasion
+Deerskin Gloves	Gloves	Evasion
+Deicide Mask	Helmet	Evasion/Energy Shield
+Demon Crown	Helmet	Armour/Energy Shield
+Demon Dagger	Dagger	Rune Dagger
+Demon's Horn	Wand	
+Desert Brigandine	Body Armour	Armour/Evasion
+Despot Axe	Two Handed Axe	
+Destiny Leather	Body Armour	Evasion
+Destroyer Regalia	Body Armour	Energy Shield
+Devourer Talisman	Amulet	Talisman
+Devout Chainmail	Body Armour	Armour/Energy Shield
+Diamond Flask	Flask	Utility
+Diamond Ring	Ring	
+Dire Pelt	Helmet	Evasion
+Disapprobation Axe	One Handed Axe	
+Divine Crown	Helmet	Armour/Energy Shield
+Divine Life Flask	Flask	Life
+Divine Mana Flask	Flask	Mana
+Double Axe	Two Handed Axe	
+Double Claw	Claw	
+Dragon Mace	One Handed Mace	
+Dragonbone Rapier	One Handed Sword	Thrusting
+Dragonscale Boots	Boots	Armour/Evasion
+Dragonscale Doublet	Body Armour	Armour/Evasion
+Dragonscale Gauntlets	Gloves	Armour/Evasion
+Dragoon Sword	One Handed Sword	Thrusting
+Draining Eshgraft	Graft	
+Dread Maul	Two Handed Mace	
+Dream Mace	One Handed Mace	
+Dreamquest Slippers	Boots	Energy Shield
+Driftwood Club	One Handed Mace	
+Driftwood Maul	Two Handed Mace	
+Driftwood Sceptre	Sceptre	
+Driftwood Spiked Shield	Shield	Evasion/Energy Shield
+Driftwood Wand	Wand	
+Dusk Blade	One Handed Sword	
+Dusk Ring	Ring	
+Duskwalk Slippers	Boots	Energy Shield
+Eagle Claw	Claw	
+Ebony Tower Shield	Shield	Armour
+Eclipse Staff	Staff	
+Eelskin Boots	Boots	Evasion
+Eelskin Gloves	Gloves	Evasion
+Eelskin Tunic	Body Armour	Evasion
+Elder Sword	One Handed Sword	
+Elegant Foil	One Handed Sword	Thrusting
+Elegant Ringmail	Body Armour	Armour/Energy Shield
+Elegant Round Shield	Shield	Armour/Evasion
+Elegant Sword	One Handed Sword	
+Embroidered Gloves	Gloves	Energy Shield
+Enameled Buckler	Shield	Evasion
+Endothermic Buckler	Shield	Evasion
+Energy Blade One Handed	One Handed Sword	
+Energy Blade Two Handed	Two Handed Sword	
+Engraved Greatsword	Two Handed Sword	
+Engraved Hatchet	One Handed Axe	
+Engraved Wand	Wand	
+Enthalpic Ring	Ring	
+Erupting Xophgraft	Graft	
+Estoc	One Handed Sword	Thrusting
+Etched Greatsword	Two Handed Sword	
+Etched Hatchet	One Handed Axe	
+Etched Kite Shield	Shield	Armour/Energy Shield
+Eternal Burgonet	Helmet	Armour
+Eternal Life Flask	Flask	Life
+Eternal Mana Flask	Flask	Mana
+Eternal Sword	One Handed Sword	
+Ethereal Blade	Dagger	
+Ethereal Bow	Bow	
+Eventuality Rod	Staff	Warstaff
+Exhausting Spirit Shield	Shield	Energy Shield
+Exothermic Tower Shield	Shield	Armour
+Exquisite Blade	Two Handed Sword	
+Exquisite Leather	Body Armour	Evasion
+Eye Gouger	Claw	
+Ezomyte Axe	Two Handed Axe	
+Ezomyte Blade	Two Handed Sword	
+Ezomyte Burgonet	Helmet	Armour
+Ezomyte Dagger	Dagger	Rune Dagger
+Ezomyte Spiked Shield	Shield	Evasion/Energy Shield
+Ezomyte Staff	Staff	Warstaff
+Ezomyte Tower Shield	Shield	Armour
+Faithful Helmet	Helmet	Armour/Energy Shield
+Fancy Foil	One Handed Sword	Thrusting
+Fangjaw Talisman	Amulet	Talisman
+Farric Talisman	Amulet	Talisman
+Faun's Horn	Wand	
+Feathered Arrow Quiver	Quiver	
+Fencer Helm	Helmet	Armour/Evasion
+Fenumal Talisman	Amulet	Talisman
+Festival Mask	Helmet	Evasion/Energy Shield
+Fickle Spiritblade	One Handed Sword	
+Field Lamellar	Body Armour	Armour/Evasion
+Fiend Dagger	Dagger	Rune Dagger
+Fingerless Silk Gloves	Gloves	Energy Shield
+Fir Round Shield	Shield	Armour/Evasion
+Fire Arrow Quiver	Quiver	
+Fishing Rod	Fishing Rod	
+Fishscale Gauntlets	Gloves	Armour/Evasion
+Flame Hellion Talisman	Amulet	Talisman
+Flamecaller Xophgraft	Graft	
+Flanged Mace	One Handed Mace	
+Flare Mace	One Handed Mace	
+Flashfire Blade	Dagger	Rune Dagger
+Flaying Knife	Dagger	
+Fleshripper	Two Handed Axe	
+Flickerflame Blade	Dagger	Rune Dagger
+Fluted Bascinet	Helmet	Armour/Evasion
+Focused Amulet	Amulet	
+Footman Sword	Two Handed Sword	
+Formless Ring	Ring	
+Fossilised Spirit Shield	Shield	Energy Shield
+Foul Staff	Staff	Warstaff
+Foundry Bow	Bow	
+Freezing Tulgraft	Graft	
+Fright Claw	Claw	
+Fright Maul	Two Handed Mace	
+Frontier Leather	Body Armour	Evasion
+Frost Hellion Talisman	Amulet	Talisman
+Fugitive Boots	Boots	Evasion/Energy Shield
+Fugitive Ring	Ring	
+Fulgurite Tincture	Tincture	
+Full Chainmail	Body Armour	Armour/Energy Shield
+Full Dragonscale	Body Armour	Armour/Evasion
+Full Leather	Body Armour	Evasion
+Full Plate	Body Armour	Armour
+Full Ringmail	Body Armour	Armour/Energy Shield
+Full Scale Armour	Body Armour	Armour/Evasion
+Full Wyrmscale	Body Armour	Armour/Evasion
+Full Wyvernscale	Body Armour	Armour/Evasion
+Gale Crown	Helmet	Evasion/Energy Shield
+Gargantuan Talisman	Amulet	Talisman
+Gavel	One Handed Mace	
+Gemini Claw	Claw	
+Gemstone Sword	One Handed Sword	
+General's Brigandine	Body Armour	Armour/Evasion
+General's Helmet	Helmet	Armour
+Geodesic Ring	Ring	
+Ghastly Eye Jewel	Jewel	Abyss
+Ghostflame Blade	One Handed Sword	
+Giant Life Flask	Flask	Life
+Giant Mana Flask	Flask	Mana
+Giantslayer Helmet	Helmet	Armour
+Gilded Axe	Two Handed Axe	
+Gilded Buckler	Shield	Evasion
+Gilded Sallet	Helmet	Armour/Evasion
+Girded Tower Shield	Shield	Armour
+Gladiator Helmet	Helmet	Armour
+Gladiator Plate	Body Armour	Armour
+Gladius	One Handed Sword	
+Glass Shank	Dagger	
+Gloam Ring	Ring	
+Glorious Leather	Body Armour	Evasion
+Glorious Plate	Body Armour	Armour
+Gnarled Branch	Staff	
+Goat's Horn	Wand	
+Goathide Boots	Boots	Evasion
+Goathide Buckler	Shield	Evasion
+Goathide Gloves	Gloves	Evasion
+Goatman Talisman	Amulet	Talisman
+Gold Amulet	Amulet	
+Gold Flask	Flask	Utility
+Gold Ring	Ring	
+Golden Bracers	Gloves	
+Golden Buckler	Shield	Evasion
+Golden Caligae	Boots	
+Golden Flame	Shield	
+Golden Hoop	Ring	
+Golden Kris	Dagger	Rune Dagger
+Golden Mantle	Body Armour	Armour/Evasion/Energy Shield
+Golden Mask	Helmet	Evasion/Energy Shield
+Golden Obi	Belt	
+Golden Plate	Body Armour	Armour
+Golden Wreath	Helmet	
+Goliath Gauntlets	Gloves	Armour
+Goliath Greaves	Boots	Armour
+Goliath Talisman	Amulet	Talisman
+Gouger	Claw	
+Graceful Sword	One Handed Sword	
+Grand Life Flask	Flask	Life
+Grand Mana Flask	Flask	Mana
+Grand Ringmail	Body Armour	Armour/Energy Shield
+Granite Flask	Flask	Utility
+Grappler	One Handed Sword	
+Grasping Mail	Body Armour	Armour/Evasion/Energy Shield
+Great Crown	Helmet	Armour/Energy Shield
+Great Helmet	Helmet	Armour/Energy Shield
+Great Mallet	Two Handed Mace	
+Great Maw Talisman	Amulet	Talisman
+Great White Claw	Claw	
+Greater Life Flask	Flask	Life
+Greater Mana Flask	Flask	Mana
+Greatwolf Talisman	Amulet	Talisman
+Grinning Fetish	Sceptre	
+Gripped Gloves	Gloves	Evasion
+Grizzly Pelt	Helmet	Evasion
+Grove Bow	Bow	
+Guarding Gauntlets	Gloves	Armour
+Gut Ripper	Claw	
+Gutting Knife	Dagger	
+Hallowed Hybrid Flask	Flask	Hybrid
+Hallowed Life Flask	Flask	Life
+Hallowed Mana Flask	Flask	Mana
+Hammered Buckler	Shield	Evasion
+Harbinger Bow	Bow	
+Hardening Uulgraft	Graft	
+Harlequin Mask	Helmet	Evasion/Energy Shield
+Harmonic Spirit Shield	Shield	Energy Shield
+Harpy Rapier	One Handed Sword	Thrusting
+Harpyskin Boots	Boots	Evasion
+Harpyskin Gloves	Gloves	Evasion
+Haunted Bascinet	Helmet	Armour/Evasion
+Headman's Sword	Two Handed Sword	
+Headsman Axe	Two Handed Axe	
+Heat-attuned Tower Shield	Shield	Armour
+Heathen Wand	Wand	
+Heavy Arrow Quiver	Quiver	
+Heavy Belt	Belt	
+Heavy Quiver	Quiver	
+Hedron Bow	Bow	
+Helical Ring	Ring	
+Hellion's Paw	Claw	
+Hexclaw Talisman	Amulet	Talisman
+Highborn Bow	Bow	
+Highborn Staff	Staff	
+Highland Blade	Two Handed Sword	
+Hollowpoint Dagger	Dagger	
+Holy Chainmail	Body Armour	Armour/Energy Shield
+Honed Cleaver	Two Handed Axe	
+Hook Sword	One Handed Sword	
+Horned Sceptre	Sceptre	
+Horned Talisman	Amulet	Talisman
+Hubris Circlet	Helmet	Energy Shield
+Hunter Hood	Helmet	Evasion
+Hussar Brigandine	Body Armour	Armour/Evasion
+Hybrid Arachnid Talisman	Amulet	Talisman
+Hydrascale Boots	Boots	Armour/Evasion
+Hydrascale Gauntlets	Gloves	Armour/Evasion
+Hypnotic Eye Jewel	Jewel	Abyss
+Imbued Wand	Wand	
+Imp Crown	Helmet	Armour/Energy Shield
+Imp Dagger	Dagger	Rune Dagger
+Impact Force Propagator	Two Handed Mace	
+Impaling Uulgraft	Graft	
+Imperial Bow	Bow	
+Imperial Buckler	Shield	Evasion
+Imperial Claw	Claw	
+Imperial Maul	Two Handed Mace	
+Imperial Skean	Dagger	Rune Dagger
+Imperial Staff	Staff	
+Infantry Brigandine	Body Armour	Armour/Evasion
+Infernal Axe	One Handed Axe	
+Infernal Blade	Dagger	Rune Dagger
+Infernal Sword	Two Handed Sword	
+Infiltrator Boots	Boots	Evasion/Energy Shield
+Infiltrator Mitts	Gloves	Evasion/Energy Shield
+Iolite Ring	Ring	
+Iron Circlet	Helmet	Energy Shield
+Iron Flask	Flask	Utility
+Iron Gauntlets	Gloves	Armour
+Iron Greaves	Boots	Armour
+Iron Hat	Helmet	Armour
+Iron Mask	Helmet	Evasion/Energy Shield
+Iron Ring	Ring	
+Iron Sceptre	Sceptre	
+Iron Staff	Staff	Warstaff
+Ironscale Boots	Boots	Armour/Evasion
+Ironscale Gauntlets	Gloves	Armour/Evasion
+Ironwood Buckler	Shield	Evasion
+Ironwood Tincture	Tincture	
+Ivory Bow	Bow	
+Ivory Spirit Shield	Shield	Energy Shield
+Jade Amulet	Amulet	
+Jade Chopper	Two Handed Axe	
+Jade Flask	Flask	Utility
+Jade Hatchet	One Handed Axe	
+Jagged Foil	One Handed Sword	Thrusting
+Jagged Maul	Two Handed Mace	
+Jasper Axe	One Handed Axe	
+Jasper Chopper	Two Handed Axe	
+Jester Mask	Helmet	Evasion/Energy Shield
+Jet Amulet	Amulet	
+Jet Ring	Ring	
+Jewelled Foil	One Handed Sword	Thrusting
+Jingling Spirit Shield	Shield	Energy Shield
+Jolting Eshgraft	Graft	
+Judgement Staff	Staff	Warstaff
+Karui Axe	One Handed Axe	
+Karui Chopper	Two Handed Axe	
+Karui Maul	Two Handed Mace	
+Karui Sceptre	Sceptre	
+Keyblade	Two Handed Sword	
+Kinetic Wand	Wand	
+Knight Helm	Helmet	Armour/Evasion
+Labrys	Two Handed Axe	
+Lacewood Spirit Shield	Shield	Energy Shield
+Lacquered Buckler	Shield	Evasion
+Lacquered Garb	Body Armour	Evasion/Energy Shield
+Lacquered Helmet	Helmet	Armour/Evasion
+Laminated Kite Shield	Shield	Armour/Energy Shield
+Lapis Amulet	Amulet	
+Large Cluster Jewel	Jewel	Cluster
+Large Hybrid Flask	Flask	Hybrid
+Large Life Flask	Flask	Life
+Large Mana Flask	Flask	Mana
+Lathi	Staff	
+Latticed Ringmail	Body Armour	Armour/Energy Shield
+Layered Kite Shield	Shield	Armour/Energy Shield
+Lead Sceptre	Sceptre	
+Leather Belt	Belt	
+Leather Cap	Helmet	Evasion
+Leather Hood	Helmet	Evasion
+Leatherscale Boots	Boots	Armour/Evasion
+Legion Boots	Boots	Armour/Energy Shield
+Legion Gloves	Gloves	Armour/Energy Shield
+Legion Hammer	One Handed Mace	
+Legion Plate	Body Armour	Armour
+Legion Sword	One Handed Sword	
+Leviathan Gauntlets	Gloves	Armour
+Leviathan Greaves	Boots	Armour
+Leyline Gloves	Gloves	Energy Shield
+Lich's Circlet	Helmet	Energy Shield
+Light Brigandine	Body Armour	Armour/Evasion
+Light Quiver	Quiver	
+Linden Kite Shield	Shield	Armour/Energy Shield
+Lion Pelt	Helmet	Evasion
+Lion Sword	Two Handed Sword	
+Lithe Blade	Two Handed Sword	
+Lone Antler Talisman	Amulet	Talisman
+Long Bow	Bow	
+Long Staff	Staff	
+Longsword	Two Handed Sword	
+Longtooth Talisman	Amulet	Talisman
+Lordly Plate	Body Armour	Armour
+Loricated Ringmail	Body Armour	Armour/Energy Shield
+Lunaris Circlet	Helmet	Energy Shield
+Lupine Charm	Jewel	Charm
+Lynx Talisman	Amulet	Talisman
+Maelstrom Staff	Staff	Warstaff
+Mage's Vestment	Body Armour	Energy Shield
+Magistrate Crown	Helmet	Armour/Energy Shield
+Magma Hound Talisman	Amulet	Talisman
+Magmatic Tower Shield	Shield	Armour
+Mahogany Tower Shield	Shield	Armour
+Majestic Pelt	Helmet	Evasion
+Majestic Plate	Body Armour	Armour
+Malign Fangs	Claw	
+Mallet	Two Handed Mace	
+Maltreatment Axe	One Handed Axe	
+Mandible Talisman	Amulet	Talisman
+Manifold Ring	Ring	
+Maple Round Shield	Shield	Armour/Evasion
+Maraketh Bow	Bow	
+Marble Amulet	Amulet	
+Marshall's Brigandine	Body Armour	Armour/Evasion
+Martyr Boots	Boots	Armour/Energy Shield
+Martyr Gloves	Gloves	Armour/Energy Shield
+Meatgrinder	Two Handed Mace	
+Mechalarm Belt	Belt	
+Mechanical Belt	Belt	
+Medium Cluster Jewel	Jewel	Cluster
+Medium Hybrid Flask	Flask	Hybrid
+Medium Life Flask	Flask	Life
+Medium Mana Flask	Flask	Mana
+Mesh Boots	Boots	Armour/Energy Shield
+Mesh Gloves	Gloves	Armour/Energy Shield
+Micro-Distillery Belt	Belt	
+Midnight Blade	One Handed Sword	
+Military Staff	Staff	Warstaff
+Mind Cage	Helmet	Energy Shield
+Mirrored Spiked Shield	Shield	Evasion/Energy Shield
+Molten Xophgraft	Graft	
+Monkey Paw Talisman	Amulet	Talisman
+Monkey Paw Talisman (Frenzy)	Amulet	Talisman
+Monkey Paw Talisman (Power)	Amulet	Talisman
+Monkey Twins Talisman	Amulet	Talisman
+Moon Staff	Staff	
+Moonlit Circlet	Helmet	Energy Shield
+Moonstone Ring	Ring	
+Morning Star	Two Handed Mace	
+Mosaic Kite Shield	Shield	Armour/Energy Shield
+Murder Boots	Boots	Evasion/Energy Shield
+Murder Mitts	Gloves	Evasion/Energy Shield
+Murderous Eye Jewel	Jewel	Abyss
+Nailed Fist	Claw	
+Nameless Ring	Ring	
+Necromancer Circlet	Helmet	Energy Shield
+Necromancer Silks	Body Armour	Energy Shield
+Necrotic Armour	Body Armour	Evasion/Energy Shield
+Nexus Gloves	Gloves	Energy Shield
+Nightmare Bascinet	Helmet	Armour/Evasion
+Nightmare Mace	One Handed Mace	
+Nightweave Robe	Body Armour	Energy Shield
+Nightwind Slippers	Boots	Energy Shield
+Noble Axe	Two Handed Axe	
+Noble Claw	Claw	
+Noble Tricorne	Helmet	Evasion
+Nubuck Boots	Boots	Evasion
+Nubuck Gloves	Gloves	Evasion
+Oak Buckler	Shield	Evasion
+Oakbranch Tincture	Tincture	
+Occultist's Vestment	Body Armour	Energy Shield
+Ochre Sceptre	Sceptre	
+Octopus Talisman	Amulet	Talisman
+Oiled Coat	Body Armour	Evasion/Energy Shield
+Oiled Vest	Body Armour	Evasion/Energy Shield
+Omen Wand	Wand	
+Onyx Amulet	Amulet	
+Opal Ring	Ring	
+Opal Sceptre	Sceptre	
+Opal Wand	Wand	
+Organic Ring	Ring	
+Ornate Mace	One Handed Mace	
+Ornate Quiver	Quiver	
+Ornate Ringmail	Body Armour	Armour/Energy Shield
+Ornate Spiked Shield	Shield	Evasion/Energy Shield
+Ornate Sword	Two Handed Sword	
+Oscillating Sceptre	Sceptre	
+Padded Jacket	Body Armour	Evasion/Energy Shield
+Padded Vest	Body Armour	Evasion/Energy Shield
+Pagan Wand	Wand	
+Painted Buckler	Shield	Evasion
+Painted Tower Shield	Shield	Armour
+Paladin Boots	Boots	Armour/Energy Shield
+Paladin Crown	Helmet	Armour/Energy Shield
+Paladin Gloves	Gloves	Armour/Energy Shield
+Paladin's Hauberk	Body Armour	Armour/Energy Shield
+Paua Amulet	Amulet	
+Paua Ring	Ring	
+Pearlescent Amulet	Amulet	
+Pecoraro	One Handed Sword	Thrusting
+Penetrating Arrow Quiver	Quiver	
+Penitent Mask	Helmet	Armour/Evasion
+Penumbra Ring	Ring	
+Pernach	One Handed Mace	
+Petrified Club	One Handed Mace	
+Phantom Boots	Boots	Evasion/Energy Shield
+Phantom Mace	One Handed Mace	
+Phantom Mitts	Gloves	Evasion/Energy Shield
+Pig-Faced Bascinet	Helmet	Armour/Evasion
+Piledriver	Two Handed Mace	
+Pine Buckler	Shield	Evasion
+Pinnacle Tower Shield	Shield	Armour
+Pitbull Talisman	Amulet	Talisman
+Plague Mask	Helmet	Evasion/Energy Shield
+Plagued Arachnid Talisman	Amulet	Talisman
+Plank Kite Shield	Shield	Armour/Energy Shield
+Plate Vest	Body Armour	Armour
+Plated Gauntlets	Gloves	Armour
+Plated Greaves	Boots	Armour
+Plated Maul	Two Handed Mace	
+Platinum Kris	Dagger	Rune Dagger
+Platinum Sceptre	Sceptre	
+Pneumatic Dagger	Dagger	
+Poignard	Dagger	
+Poisonberry Tincture	Tincture	
+Polar Buckler	Shield	Evasion
+Poleaxe	Two Handed Axe	
+Polished Spiked Shield	Shield	Evasion/Energy Shield
+Potentiality Rod	Staff	Warstaff
+Praetor Crown	Helmet	Armour/Energy Shield
+Precursor Gauntlets	Gloves	Armour
+Precursor Greaves	Boots	Armour
+Prehistoric Claw	Claw	
+Preserving Gauntlets	Gloves	Armour
+Pressurised Dagger	Dagger	
+Primal Arrow Quiver	Quiver	
+Primal Skull Talisman	Amulet	Talisman
+Prime Cleaver	Two Handed Axe	
+Primeval Rapier	One Handed Sword	Thrusting
+Primitive Staff	Staff	
+Primordial Staff	Staff	
+Prismatic Jewel	Jewel	
+Prismatic Ring	Ring	
+Prismatic Tincture	Tincture	
+Profane Wand	Wand	
+Prong Dagger	Dagger	
+Prophecy Wand	Wand	
+Prophet Crown	Helmet	Armour/Energy Shield
+Psychotic Axe	One Handed Axe	
+Quarterstaff	Staff	
+Quartz Flask	Flask	Utility
+Quartz Sceptre	Sceptre	
+Quartz Wand	Wand	
+Quicksilver Flask	Flask	Utility
+Quilted Jacket	Body Armour	Evasion/Energy Shield
+Random One Hand Sword	One Handed Sword	
+Random Two Hand Sword	Two Handed Sword	
+Ranger Bow	Bow	
+Ratcheting Ring	Ring	
+Raven Mask	Helmet	Evasion/Energy Shield
+Rawhide Boots	Boots	Evasion
+Rawhide Gloves	Gloves	Evasion
+Rawhide Tower Shield	Shield	Armour
+Reaver Axe	One Handed Axe	
+Reaver Helmet	Helmet	Armour
+Reaver Sword	Two Handed Sword	
+Rebuking Blade	Two Handed Sword	
+Reciprocation Staff	Staff	
+Recurve Bow	Bow	
+Redwood Spiked Shield	Shield	Evasion/Energy Shield
+Reflex Bow	Bow	
+Regicide Mask	Helmet	Evasion/Energy Shield
+Reinforced Greaves	Boots	Armour
+Reinforced Kite Shield	Shield	Armour/Energy Shield
+Reinforced Tower Shield	Shield	Armour
+Replicating Eshgraft	Graft	
+Retch Talisman	Amulet	Talisman
+Rhex Talisman	Amulet	Talisman
+Rhoa Talisman	Amulet	Talisman
+Ring	Ring	
+Ringmail Boots	Boots	Armour/Energy Shield
+Ringmail Coat	Body Armour	Armour/Energy Shield
+Ringmail Gloves	Gloves	Armour/Energy Shield
+Ritual Sceptre	Sceptre	
+Riveted Boots	Boots	Armour/Energy Shield
+Riveted Gloves	Gloves	Armour/Energy Shield
+Rock Breaker	One Handed Mace	
+Rosethorn Tincture	Tincture	
+Rot Head Talisman	Amulet	Talisman
+Rotfeather Talisman	Amulet	Talisman
+Rotted Round Shield	Shield	Armour/Evasion
+Royal Axe	One Handed Axe	
+Royal Bow	Bow	
+Royal Burgonet	Helmet	Armour
+Royal Plate	Body Armour	Armour
+Royal Sceptre	Sceptre	
+Royal Skean	Dagger	Rune Dagger
+Royal Staff	Staff	
+Ruby Amulet	Amulet	
+Ruby Flask	Flask	Utility
+Ruby Ring	Ring	
+Rugged Quiver	Quiver	
+Runic Crest	Helmet	Ward
+Runic Crown	Helmet	Ward
+Runic Gages	Gloves	Ward
+Runic Gauntlets	Gloves	Ward
+Runic Gloves	Gloves	Ward
+Runic Greaves	Boots	Ward
+Runic Hatchet	One Handed Axe	
+Runic Helm	Helmet	Ward
+Runic Sabatons	Boots	Ward
+Runic Sollerets	Boots	Ward
+Rusted Coif	Helmet	Armour/Energy Shield
+Rusted Hatchet	One Handed Axe	
+Rusted Spike	One Handed Sword	Thrusting
+Rusted Sword	One Handed Sword	
+Rustic Sash	Belt	
+Sabre	One Handed Sword	
+Sacred Chainmail	Body Armour	Armour/Energy Shield
+Sacred Hybrid Flask	Flask	Hybrid
+Sacred Life Flask	Flask	Life
+Sacred Mana Flask	Flask	Mana
+Sacrificial Garb	Body Armour	Armour/Evasion/Energy Shield
+Sadist Garb	Body Armour	Evasion/Energy Shield
+Sage Gloves	Gloves	Energy Shield
+Sage Slippers	Boots	Energy Shield
+Sage Wand	Wand	
+Sage's Robe	Body Armour	Energy Shield
+Sai	Dagger	
+Saint's Hauberk	Body Armour	Armour/Energy Shield
+Saintly Chainmail	Body Armour	Armour/Energy Shield
+Sallet	Helmet	Armour/Evasion
+Sambar Sceptre	Sceptre	
+Samite Gloves	Gloves	Energy Shield
+Samite Slippers	Boots	Energy Shield
+Samnite Helmet	Helmet	Armour
+Sanctified Life Flask	Flask	Life
+Sanctified Mana Flask	Flask	Mana
+Sand Spitter Talisman	Amulet	Talisman
+Sanguine Raiment	Body Armour	Evasion/Energy Shield
+Sapphire Flask	Flask	Utility
+Sapphire Ring	Ring	
+Saqawine Talisman	Amulet	Talisman
+Satin Gloves	Gloves	Energy Shield
+Satin Slippers	Boots	Energy Shield
+Savage Crab Talisman	Amulet	Talisman
+Savant's Robe	Body Armour	Energy Shield
+Scale Doublet	Body Armour	Armour/Evasion
+Scale Vest	Body Armour	Armour/Evasion
+Scare Mask	Helmet	Evasion/Energy Shield
+Scarlet Raiment	Body Armour	Evasion/Energy Shield
+Scarlet Round Shield	Shield	Armour/Evasion
+Scholar Boots	Boots	Energy Shield
+Scholar's Robe	Body Armour	Energy Shield
+Scorpion Talisman	Amulet	Talisman
+Scrabbler Talisman	Amulet	Talisman
+Seaglass Amulet	Amulet	
+Searching Eye Jewel	Jewel	Abyss
+Secutor Helm	Helmet	Armour/Evasion
+Sekhem	Sceptre	
+Sentinel Jacket	Body Armour	Evasion/Energy Shield
+Serpentine Staff	Staff	Warstaff
+Serpentscale Boots	Boots	Armour/Evasion
+Serpentscale Gauntlets	Gloves	Armour/Evasion
+Serrated Arrow Quiver	Quiver	
+Serrated Foil	One Handed Sword	Thrusting
+Shabby Jerkin	Body Armour	Evasion
+Shackled Boots	Boots	Evasion/Energy Shield
+Shadow Axe	Two Handed Axe	
+Shadow Fangs	Claw	
+Shadow Sceptre	Sceptre	
+Shadowed Ring	Ring	
+Shagreen Boots	Boots	Evasion
+Shagreen Gloves	Gloves	Evasion
+Shagreen Tower Shield	Shield	Armour
+Sharkskin Boots	Boots	Evasion
+Sharkskin Gloves	Gloves	Evasion
+Sharkskin Tunic	Body Armour	Evasion
+Sharktooth Arrow Quiver	Quiver	
+Sharktooth Claw	Claw	
+Shield Crab Talisman	Amulet	Talisman
+Short Bow	Bow	
+Siege Axe	One Handed Axe	
+Siege Helmet	Helmet	Armour
+Silk Gloves	Gloves	Energy Shield
+Silk Robe	Body Armour	Energy Shield
+Silk Slippers	Boots	Energy Shield
+Silken Garb	Body Armour	Energy Shield
+Silken Hood	Helmet	Evasion
+Silken Vest	Body Armour	Energy Shield
+Silken Wrap	Body Armour	Energy Shield
+Silver Flask	Flask	Utility
+Simple Robe	Body Armour	Energy Shield
+Simplex Amulet	Amulet	
+Sinner Tricorne	Helmet	Evasion
+Skean	Dagger	Rune Dagger
+Skinning Knife	Dagger	
+Slaughter Knife	Dagger	Rune Dagger
+Sledgehammer	Two Handed Mace	
+Sleek Coat	Body Armour	Evasion/Energy Shield
+Slink Boots	Boots	Evasion
+Slink Gloves	Gloves	Evasion
+Small Cluster Jewel	Jewel	Cluster
+Small Hybrid Flask	Flask	Hybrid
+Small Life Flask	Flask	Life
+Small Mana Flask	Flask	Mana
+Smallsword	One Handed Sword	Thrusting
+Sniper Bow	Bow	
+Solar Maul	Two Handed Mace	
+Solarine Bow	Bow	
+Solaris Circlet	Helmet	Energy Shield
+Soldier Boots	Boots	Armour/Energy Shield
+Soldier Gloves	Gloves	Armour/Energy Shield
+Soldier Helmet	Helmet	Armour/Energy Shield
+Soldier's Brigandine	Body Armour	Armour/Evasion
+Somatic Wand	Wand	
+Sorcerer Boots	Boots	Energy Shield
+Sorcerer Gloves	Gloves	Energy Shield
+Sorrow Mask	Helmet	Armour/Evasion
+Sovereign Spiked Shield	Shield	Evasion/Energy Shield
+Sparkling Claw	Claw	
+Spectral Axe	One Handed Axe	
+Spectral Sword	Two Handed Sword	
+Spider Crab Talisman	Amulet	Talisman
+Spidersilk Robe	Body Armour	Energy Shield
+Spike-Point Arrow Quiver	Quiver	
+Spiked Bundle	Shield	Evasion/Energy Shield
+Spiked Club	One Handed Mace	
+Spiked Gloves	Gloves	Armour
+Spiked Round Shield	Shield	Armour/Evasion
+Spiking Uulgraft	Graft	
+Spine Bow	Bow	
+Spinefuse Talisman	Amulet	Talisman
+Spiny Maul	Two Handed Mace	
+Spiny Round Shield	Shield	Armour/Evasion
+Spiraled Foil	One Handed Sword	Thrusting
+Spiraled Wand	Wand	
+Splendid Round Shield	Shield	Armour/Evasion
+Splintered Tower Shield	Shield	Armour
+Splitnewt Talisman	Amulet	Talisman
+Sporebloom Tincture	Tincture	
+Squalling Tulgraft	Graft	
+Squid Talisman	Amulet	Talisman
+Stabilising Sceptre	Sceptre	
+Stag Sceptre	Sceptre	
+Stealth Boots	Boots	Evasion
+Stealth Gloves	Gloves	Evasion
+Steel Circlet	Helmet	Energy Shield
+Steel Gauntlets	Gloves	Armour
+Steel Greaves	Boots	Armour
+Steel Kite Shield	Shield	Armour/Energy Shield
+Steel Ring	Ring	
+Steelhead	Two Handed Mace	
+Steelscale Boots	Boots	Armour/Evasion
+Steelscale Gauntlets	Gloves	Armour/Evasion
+Steelwood Bow	Bow	
+Stibnite Flask	Flask	Utility
+Stiletto	Dagger	
+Stoking Xophgraft	Graft	
+Stone Axe	Two Handed Axe	
+Stone Hammer	One Handed Mace	
+Storming Eshgraft	Graft	
+Stormrider Boots	Boots	Evasion
+Strapped Boots	Boots	Evasion/Energy Shield
+Strapped Leather	Body Armour	Evasion
+Strapped Mitts	Gloves	Evasion/Energy Shield
+Studded Belt	Belt	
+Studded Round Shield	Shield	Armour/Evasion
+Stygian Vise	Belt	
+Subsuming Spirit Shield	Shield	Energy Shield
+Sulphur Flask	Flask	Utility
+Summoning Tulgraft	Graft	
+Sun Leather	Body Armour	Evasion
+Sun Plate	Body Armour	Armour
+Sundering Axe	Two Handed Axe	
+Sunfire Circlet	Helmet	Energy Shield
+Supreme Leather	Body Armour	Evasion
+Supreme Spiked Shield	Shield	Evasion/Energy Shield
+Synaptic Ring	Ring	
+Syndicate's Garb	Body Armour	Evasion
+Talon Axe	Two Handed Axe	
+Tarnished Spirit Shield	Shield	Energy Shield
+Taurus Talisman	Amulet	Talisman
+Teak Round Shield	Shield	Armour/Evasion
+Tempered Foil	One Handed Sword	Thrusting
+Tenderizer	One Handed Mace	
+Tenebrous Ring	Ring	
+Terror Claw	Claw	
+Terror Maul	Two Handed Mace	
+Thicket Bow	Bow	
+Thief's Garb	Body Armour	Evasion
+Thorium Spirit Shield	Shield	Energy Shield
+Thorn Rapier	One Handed Sword	Thrusting
+Three Hands Talisman	Amulet	Talisman
+Three Rat Talisman	Amulet	Talisman
+Thresher Claw	Claw	
+Throat Stabber	Claw	
+Thwarting Gauntlets	Gloves	Armour
+Tiger Hook	One Handed Sword	
+Tiger Sword	Two Handed Sword	
+Tiger Talisman	Amulet	Talisman
+Tiger's Paw	Claw	
+Timber Axe	Two Handed Axe	
+Timeless Jewel	Jewel	Timeless
+Timeworn Claw	Claw	
+Tinker Gloves	Gloves	Evasion
+Titan Gauntlets	Gloves	Armour
+Titan Greaves	Boots	Armour
+Titan Plate	Body Armour	Armour
+Titanium Spirit Shield	Shield	Energy Shield
+Tomahawk	One Handed Axe	
+Topaz Flask	Flask	Utility
+Topaz Ring	Ring	
+Tornado Wand	Wand	
+Torture Cage	Helmet	Energy Shield
+Torturer Garb	Body Armour	Evasion/Energy Shield
+Torturer's Mask	Helmet	Evasion/Energy Shield
+Totemic Maul	Two Handed Mace	
+Transfer-attuned Spirit Shield	Shield	Energy Shield
+Transformer Staff	Staff	
+Trapper Boots	Boots	Evasion/Energy Shield
+Trapper Mitts	Gloves	Evasion/Energy Shield
+Trapsetter Gloves	Gloves	Evasion
+Tribal Circlet	Helmet	Energy Shield
+Tribal Club	One Handed Mace	
+Tribal Maul	Two Handed Mace	
+Tricorne	Helmet	Evasion
+Trisula	Dagger	
+Triumphant Lamellar	Body Armour	Armour/Evasion
+Turquoise Amulet	Amulet	
+Twig Spirit Shield	Shield	Energy Shield
+Twilight Blade	One Handed Sword	
+Twilight Regalia	Body Armour	Energy Shield
+Twin Claw	Claw	
+Two-Handed Sword	Two Handed Sword	
+Two-Point Arrow Quiver	Quiver	
+Two-Stone Ring	Ring	
+Two-Stone Ring (Cold/Lightning)	Ring	
+Two-Stone Ring (Fire/Cold)	Ring	
+Two-Stone Ring (Fire/Lightning)	Ring	
+Two-Toned Boots (Armour/Energy Shield)	Boots	Armour/Energy Shield
+Two-Toned Boots (Armour/Evasion)	Boots	Armour/Evasion
+Two-Toned Boots (Evasion/Energy Shield)	Boots	Evasion/Energy Shield
+Tyrant's Sekhem	Sceptre	
+Undying Flesh Talisman	Amulet	Talisman
+Unset Amulet	Amulet	
+Unset Ring	Ring	
+Ursa Talisman	Amulet	Talisman
+Ursine Charm	Jewel	Charm
+Ursine Pelt	Helmet	Evasion
+Vaal Axe	Two Handed Axe	
+Vaal Blade	One Handed Sword	
+Vaal Buckler	Shield	Evasion
+Vaal Claw	Claw	
+Vaal Gauntlets	Gloves	Armour
+Vaal Greatsword	Two Handed Sword	
+Vaal Greaves	Boots	Armour
+Vaal Hatchet	One Handed Axe	
+Vaal Mask	Helmet	Evasion/Energy Shield
+Vaal Rapier	One Handed Sword	Thrusting
+Vaal Regalia	Body Armour	Energy Shield
+Vaal Sceptre	Sceptre	
+Vaal Spirit Shield	Shield	Energy Shield
+Vanguard Belt	Belt	
+Variscite Blade	One Handed Sword	
+Varnished Coat	Body Armour	Evasion/Energy Shield
+Velour Boots	Boots	Evasion
+Velour Gloves	Gloves	Evasion
+Velvet Gloves	Gloves	Energy Shield
+Velvet Slippers	Boots	Energy Shield
+Vermillion Ring	Ring	
+Vile Arrow Quiver	Quiver	
+Vile Staff	Staff	Warstaff
+Vine Circlet	Helmet	Energy Shield
+Viridian Jewel	Jewel	
+Visored Sallet	Helmet	Armour/Evasion
+Void Axe	Two Handed Axe	
+Void Fangs	Claw	
+Void Sceptre	Sceptre	
+Vulture Talisman	Amulet	Talisman
+Walnut Spirit Shield	Shield	Energy Shield
+War Axe	One Handed Axe	
+War Buckler	Shield	Evasion
+War Hammer	One Handed Mace	
+War Plate	Body Armour	Armour
+War Sword	One Handed Sword	
+Warlock Boots	Boots	Energy Shield
+Warlock Gloves	Gloves	Energy Shield
+Watcher Talisman	Amulet	Talisman
+Waxed Garb	Body Armour	Evasion/Energy Shield
+Wereclaw Talisman	Amulet	Talisman
+Whalebone Rapier	One Handed Sword	Thrusting
+Widowsilk Robe	Body Armour	Energy Shield
+Wild Leather	Body Armour	Evasion
+Windbreak Boots	Boots	Evasion
+Winter Crown	Helmet	Evasion/Energy Shield
+Wolf Alpha Talisman	Amulet	Talisman
+Wolf Pelt	Helmet	Evasion
+Woodful Staff	Staff	
+Woodsplitter	Two Handed Axe	
+Wool Gloves	Gloves	Energy Shield
+Wool Shoes	Boots	Energy Shield
+Wraith Axe	One Handed Axe	
+Wraith Sword	Two Handed Sword	
+Wrapped Boots	Boots	Evasion/Energy Shield
+Wrapped Mitts	Gloves	Evasion/Energy Shield
+Wrist Chopper	One Handed Axe	
+Writhing Talisman	Amulet	Talisman
+Wyrm Mace	One Handed Mace	
+Wyrmbone Rapier	One Handed Sword	Thrusting
+Wyrmscale Boots	Boots	Armour/Evasion
+Wyrmscale Doublet	Body Armour	Armour/Evasion
+Wyrmscale Gauntlets	Gloves	Armour/Evasion
+Wyvernscale Boots	Boots	Armour/Evasion
+Wyvernscale Gauntlets	Gloves	Armour/Evasion
+Yew Spirit Shield	Shield	Energy Shield
+Zealot Boots	Boots	Armour/Energy Shield
+Zealot Gloves	Gloves	Armour/Energy Shield
+Zealot Helmet	Helmet	Armour/Energy Shield
+Zodiac Leather	Body Armour	Evasion
 
-/* ---------- 词条对照表：三级索引 ---------- */
-const ENTRIES = [];                       // {text, hash}
-const IDX_NORM = new Map();               // "#" 归一化 -> index
-const IDX_RAW  = new Map();               // 原文 -> index
-const IDX_KEY  = new Map();               // 抽掉数字的规范键 -> index
-(function(){
-  const norm = t => t.replace(/\d+(\.\d+)?/g,'#');
-  const key  = t => t.toLowerCase().replace(/[0-9#.]+/g,'').replace(/[^a-z]/g,'');
-  const raw = document.getElementById('lut').textContent;
-  for(const line of raw.split('\n')){
-    const i = line.indexOf('\t');
-    if(i <= 0) continue;
-    const text = line.slice(0,i), hash = line.slice(i+1);
-    const idx = ENTRIES.push({text, hash}) - 1;
-    if(!IDX_RAW.has(text))        IDX_RAW.set(text, idx);
-    const n = norm(text);
-    if(!IDX_NORM.has(n))          IDX_NORM.set(n, idx);
-    const k = key(text);
-    if(!IDX_KEY.has(k))           IDX_KEY.set(k, idx);
-  }
-})();
-
-function stripTag(line){ return line.replace(/^\{[^}]*\}\s*/,'').trim(); }
-
-/* 用命中的 LUT 文本反推正则，按位置精确取值 */
-function extractValues(lutText, rawLine){
-  const esc = lutText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const pat = '^' + esc.replace(/#/g, '([+-]?\\d+(?:\\.\\d+)?)') + '$';
-  let m = null;
-  try{ m = new RegExp(pat).exec(rawLine); }catch(e){}
-  if(m) return m.slice(1).map(Number);
-  const nums = (rawLine.match(/\d+(\.\d+)?/g)||[]).map(Number);
-  return nums;
-}
-
-function matchMod(mod){
-  const raw = stripTag(mod.line);
-  const norm = raw.replace(/\d+(\.\d+)?/g,'#');
-  const key  = raw.toLowerCase().replace(/[0-9#.]+/g,'').replace(/[^a-z]/g,'');
-  let idx = IDX_NORM.get(norm);
-  if(idx === undefined) idx = IDX_RAW.get(raw);
-  if(idx === undefined) idx = IDX_KEY.get(key);
-  // 单复数容错：Has 1 Abyssal Socket ↔ Has # Abyssal Sockets
-  if(idx === undefined) idx = IDX_KEY.get(key + 's');
-  if(idx === undefined && key.endsWith('s')) idx = IDX_KEY.get(key.slice(0,-1));
-  if(idx === undefined) return {id:null, value:null};
-  const e = ENTRIES[idx];
-  const vals = extractValues(e.text, raw);
-  let value = null;
-  if(vals.length >= 2) value = (vals[0]+vals[1])/2;   // "Adds A to B" 取平均，交易站也是这么算
-  else if(vals.length === 1) value = vals[0];
-  return {id:(mod.implicit?'implicit':'explicit')+'.stat_'+e.hash, value};
-}
-
-/* ---------- PoB 代码解码 ---------- */
-async function decodePob(code){
-  code = code.trim().replace(/\s+/g,'');
-  if(/^https?:\/\//i.test(code)) throw new Error('请粘贴代码本身，不是链接（浏览器跨域读不到 pobb.in）');
-  const b64 = code.replace(/-/g,'+').replace(/_/g,'/');
-  let bin;
-  try { bin = atob(b64); } catch(e){ throw new Error('不是合法的 base64，检查有没有复制全'); }
-  const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-  if(typeof DecompressionStream === 'undefined') throw new Error('浏览器太旧，不支持 DecompressionStream');
-  let buf;
-  try{
-    const s = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
-    buf = await new Response(s).arrayBuffer();
-  }catch(e){ throw new Error('解压失败，可能不是 PoB 代码'); }
-  return new TextDecoder('utf-8').decode(buf);
-}
-
-/* ---------- 物品文本解析 ---------- */
-const SKIP = /^(Unique ID|Item Level|Quality|Sockets|LevelReq|Implicits|Armour|Evasion|Energy Shield|Ward|Intangibility|Catalyst|CatalystQuality|Radius|Limited to|Requires|Cluster Jewel|Talisman Tier|Prefix|Suffix|Note|Selected Variant|Variant|League|Source|Has \d+ Socket|.*BasePercentile)\s*:/i;
-const FLAGS = /^(Corrupted|Mirrored|Split|Unidentified|Shaper Item|Elder Item|Warlord Item|Hunter Item|Redeemer Item|Crusader Item|Searing Exarch Item|Eater of Worlds Item|Fractured Item|Synthesised Item|Historic|Primordial|Foil Unique.*|Veiled.*)$/i;
-
-function parseItem(text){
-  const lines = text.split('\n').map(s=>s.trim()).filter(s=>s.length);
-  if(!lines.length) return null;
-  const rm = lines[0].match(/^Rarity:\s*(\w+)/i);
-  if(!rm) return null;
-  const rarity = rm[1].toUpperCase();
-  const twoLine = (rarity==='RARE'||rarity==='UNIQUE'||rarity==='RELIC');
-  const name = lines[1] || '';
-  const base = twoLine ? (lines[2] || '') : name;
-  let idx = twoLine ? 3 : 2;
-
-  let implicitCount = 0, implicitAt = -1;
-  for(let i=idx;i<lines.length;i++){
-    const m = lines[i].match(/^Implicits:\s*(\d+)/i);
-    if(m){ implicitCount = parseInt(m[1],10); implicitAt = i; break; }
-  }
-  const mods = [];
-  if(implicitAt >= 0){
-    for(let i=implicitAt+1;i<lines.length;i++){
-      const L = lines[i];
-      if(SKIP.test(L) || FLAGS.test(L)) continue;
-      mods.push({ line:L, implicit: (i - implicitAt) <= implicitCount });
-    }
-  }
-  return {rarity, name, base, mods};
-}
-
-
-/* ---------- 搜索 URL ---------- */
-function tradeUrl(q){
-  const lg = (document.getElementById('league').value||'Standard').trim()||'Standard';
-  return 'https://www.pathofexile.com/trade/search/'+encodeURIComponent(lg)+
-         '?q='+encodeURIComponent(JSON.stringify(q));
-}
-function buildQuery(card){
-  const st = document.getElementById('st').value;
-  const filters = [];
-  card.rows.forEach(r=>{
-    if(!r.on || !r.id) return;
-    const e = {id:r.id, disabled:false};
-    const v = parseFloat(r.input.value);
-    if(!isNaN(v)) e.value = {min:v};
-    filters.push(e);
-  });
-  const query = {status:{option:st}, stats:[{type:'and', filters}]};
-  if(card.rarity==='UNIQUE'||card.rarity==='RELIC'){
-    query.name = card.name;
-    query.type = card.base;
-  } else {
-    query.type = card.base;
-    query.filters = {type_filters:{filters:{rarity:{option: card.rarity==='MAGIC'?'magic':'nonunique'}}}};
-  }
-  return {query, sort:{price:'asc'}};
-}
-
-/* ---------- 渲染 ---------- */
-const out = document.getElementById('out');
-const statusEl = document.getElementById('status');
-let CARDS = [];
-
-function say(msg, cls){ statusEl.textContent = msg; statusEl.className = cls||''; }
-
-function render(items){
-  out.textContent = '';
-  CARDS = [];
-  const tol = (parseFloat(document.getElementById('tol').value)||80)/100;
-  const maxMods = parseInt(document.getElementById('maxmods').value,10)||4;
-
-  items.forEach(it=>{
-    const card = document.createElement('div'); card.className='card';
-    const head = document.createElement('div'); head.className='chead';
-    const left = document.createElement('div');
-    const sl = document.createElement('div'); sl.className='slot'; sl.textContent = it.slot||'—'; left.appendChild(sl);
-    const nm = document.createElement('div'); nm.className='iname '+it.rarity[0]; nm.textContent = it.name; left.appendChild(nm);
-    if(it.base && it.base!==it.name){ const bs=document.createElement('div'); bs.className='ibase'; bs.textContent=it.base; left.appendChild(bs); }
-    head.appendChild(left);
-
-    const acts = document.createElement('div'); acts.className='acts';
-    const go = document.createElement('button'); go.textContent='官网搜索';
-    const cp = document.createElement('button'); cp.className='sec'; cp.textContent='复制';
-    acts.appendChild(go); acts.appendChild(cp); head.appendChild(acts);
-    card.appendChild(head);
-
-    const rec = {rarity:it.rarity, name:it.name, base:it.base, rows:[]};
-    const isUniq = (it.rarity==='UNIQUE'||it.rarity==='RELIC');
-
-    const tbl = document.createElement('table'); tbl.className='mods';
-    let matched = 0;
-    it.mods.forEach(m=>{
-      const info = matchMod(m);
-      const tr = document.createElement('tr');
-      const tdC = document.createElement('td'); tdC.className='num';
-      const cb = document.createElement('input'); cb.type='checkbox';
-      // 传奇默认全不勾（靠名字搜即可）；稀有默认勾前 N 条能匹配的
-      cb.checked = !!info.id && !isUniq && matched < maxMods;
-      if(cb.checked) matched++;
-      cb.disabled = !info.id;
-      tdC.appendChild(cb); tr.appendChild(tdC);
-
-      const tdT = document.createElement('td'); tdT.className='txt';
-      tdT.textContent = m.line.replace(/^\{[^}]*\}\s*/,'');
-      if(m.implicit){ const b=document.createElement('span'); b.className='badge'; b.textContent='植入'; tdT.appendChild(b); }
-      if(!info.id){ tdT.classList.add('nomatch'); const b=document.createElement('span'); b.className='badge'; b.textContent='未识别'; tdT.appendChild(b); }
-      tr.appendChild(tdT);
-
-      const tdN = document.createElement('td'); tdN.className='num';
-      const inp = document.createElement('input'); inp.type='number'; inp.step='1';
-      if(info.value !== null) inp.value = Math.max(0, Math.floor(info.value*tol));
-      inp.disabled = !info.id;
-      tdN.appendChild(inp); tr.appendChild(tdN);
-
-      tbl.appendChild(tr);
-      const row = {on:cb.checked, id:info.id, input:inp};
-      cb.addEventListener('change',()=>{ row.on = cb.checked; tdT.classList.toggle('off', !cb.checked && !!info.id); });
-      rec.rows.push(row);
-    });
-    if(it.mods.length) card.appendChild(tbl);
-
-    const hint = document.createElement('p'); hint.className='hint';
-    hint.textContent = isUniq
-      ? '传奇按名字+底子精确搜索，词条默认不勾（勾上可再筛数值范围）'
-      : '默认勾选前 '+maxMods+' 条，数值已按容差自动填。勾选和数值都可以改。';
-    card.appendChild(hint);
-
-    go.addEventListener('click',()=>window.open(tradeUrl(buildQuery(rec)),'_blank','noopener'));
-    cp.addEventListener('click',async()=>{
-      try{ await navigator.clipboard.writeText(tradeUrl(buildQuery(rec)));
-           cp.textContent='已复制'; setTimeout(()=>cp.textContent='复制',1500); }
-      catch(e){ cp.textContent='失败'; setTimeout(()=>cp.textContent='复制',1500); }
-    });
-
-    rec.node = card;
-    CARDS.push(rec);
-    out.appendChild(card);
-  });
-}
-
-/* ---------- 主流程 ---------- */
-async function run(){
-  const code = document.getElementById('code').value;
-  if(!code.trim()){ say('先粘贴 PoB 代码','err'); return; }
-  say('解码中…');
-  let xml;
-  try{ xml = await decodePob(code); }
-  catch(e){ say(e.message,'err'); return; }
-
-  let doc;
-  try{ doc = new DOMParser().parseFromString(xml,'application/xml'); }
-  catch(e){ say('XML 解析失败','err'); return; }
-  if(doc.querySelector('parsererror')){ say('XML 解析失败','err'); return; }
-
-  // itemId -> 槽位名
-  const slotOf = {};
-  doc.querySelectorAll('ItemSet Slot').forEach(s=>{
-    const id = s.getAttribute('itemId');
-    if(id && id!=='0') slotOf[id] = s.getAttribute('name');
-  });
-  doc.querySelectorAll('Sockets Socket').forEach(s=>{
-    const id = s.getAttribute('itemId');
-    if(id && id!=='0' && !slotOf[id]) slotOf[id] = '天赋树珠宝 '+s.getAttribute('nodeId');
-  });
-
-  const items = [];
-  doc.querySelectorAll('Items > Item').forEach(node=>{
-    const parsed = parseItem(node.textContent||'');
-    if(!parsed) return;
-    parsed.slot = slotOf[node.getAttribute('id')] || '（未装备）';
-    items.push(parsed);
-  });
-
-  if(!items.length){ say('没解析到任何装备','err'); return; }
-
-  // 已装备的排前面
-  const ORDER = ['Weapon 1','Weapon 2','Helmet','Body Armour','Gloves','Boots','Amulet','Ring 1','Ring 2','Belt',
-                 'Flask 1','Flask 2','Flask 3','Flask 4','Flask 5','Weapon 1 Swap','Weapon 2 Swap'];
-  const rank = s => {
-    const i = ORDER.indexOf(s);
-    if(i >= 0) return i;
-    if(s === '（未装备）') return 900;
-    if(/Abyssal Socket/.test(s)) return 500;   // 装备上的深渊插槽
-    return 700;                                 // 天赋树珠宝
-  };
-  items.sort((a,b)=>rank(a.slot)-rank(b.slot));
-  render(items);
-
-  // 传奇靠名字+底子搜，词条识别与否无所谓，只统计稀有/魔法上的
-  const isUniq = it => (it.rarity==='UNIQUE'||it.rarity==='RELIC');
-  const unmatched = items.reduce((n,it)=>isUniq(it)?n:n+it.mods.filter(m=>!matchMod(m).id).length,0);
-  const nonUniqMods = items.reduce((n,it)=>isUniq(it)?n:n+it.mods.length,0);
-  const total = items.reduce((n,it)=>n+it.mods.length,0);
-  say('解析出 '+items.length+' 件装备，共 '+total+' 条词条。稀有/魔法装备 '+nonUniqMods+
-      ' 条里有 '+unmatched+' 条未识别（红色标出，需手动处理）；传奇按名字搜，词条不影响。','ok');
-}
-
-document.getElementById('go').addEventListener('click',run);
-document.getElementById('copyall').addEventListener('click',async()=>{
-  if(!CARDS.length){ say('还没生成','err'); return; }
-  const txt = CARDS.map(c=>'### '+c.name+(c.base&&c.base!==c.name?' | '+c.base:'')+'\n'+tradeUrl(buildQuery(c))).join('\n\n');
-  try{ await navigator.clipboard.writeText(txt); say('已复制 '+CARDS.length+' 条链接','ok'); }
-  catch(e){ say('复制失败','err'); }
-});
-window.__run = run;   // 供无头测试调用
-})();
 </script>
+<script type="module">
+(function(){const t=document.createElement("link").relList;if(t&&t.supports&&t.supports("modulepreload"))return;for(const o of document.querySelectorAll('link[rel="modulepreload"]'))r(o);new MutationObserver(o=>{for(const i of o)if(i.type==="childList")for(const s of i.addedNodes)s.tagName==="LINK"&&s.rel==="modulepreload"&&r(s)}).observe(document,{childList:!0,subtree:!0});function n(o){const i={};return o.integrity&&(i.integrity=o.integrity),o.referrerPolicy&&(i.referrerPolicy=o.referrerPolicy),o.crossOrigin==="use-credentials"?i.credentials="include":o.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function r(o){if(o.ep)return;o.ep=!0;const i=n(o);fetch(o.href,i)}})();async function J(){try{const e=await fetch("api/leagues");if(!e.ok)return null;const t=await e.json();return!Array.isArray(t.leagues)||t.leagues.length===0?null:t}catch{return null}}class E extends Error{}function X(e){return/^https?:\/\/\S+$/i.test(e.trim())}async function Y(e){let t;try{t=await fetch(`api/import?url=${encodeURIComponent(e.trim())}`)}catch{throw new E("链接导入需要联网版才能用，离线单文件版请直接粘贴 PoB 代码")}let n;try{n=await t.json()}catch{throw new E(`导入失败（HTTP ${t.status}）`)}if(!t.ok||!n.code)throw new E(n.error??`导入失败（HTTP ${t.status}）`);return n.code}function Z(e){const t=new Map,n=[];for(const r of e.split(`
+`)){const o=r.split("	"),i=o[0]?.trim(),s=o[1]?.trim();if(!i||!s||t.has(i))continue;const a={name:i,type:s,sub:o[2]?.trim()??""};t.set(i,a),n.push(a)}return n.sort((r,o)=>o.name.length-r.name.length),{byName:t,byLengthDesc:n}}function ee(e,t){const n=t.trim();if(e.byName.has(n))return n;for(const r of e.byLengthDesc){const o=n.indexOf(r.name);if(o<0)continue;const i=o===0||n[o-1]===" ",s=o+r.name.length,a=s===n.length||n[s]===" ";if(i&&a)return r.name}return null}function k(e){return e==="UNIQUE"||e==="RELIC"}function te(e){return e==="RARE"||k(e)}const ne=/^(Unique ID|Item Level|Quality|Sockets|LevelReq|Implicits|Armour|Evasion|Energy Shield|Ward|Intangibility|Catalyst|CatalystQuality|Radius|Limited to|Requires|Cluster Jewel|Talisman Tier|Prefix|Suffix|Note|Selected Variant|Variant|League|Source|Has \d+ Socket|.*BasePercentile)\s*:/i,oe=/^(Corrupted|Mirrored|Split|Unidentified|Shaper Item|Elder Item|Warlord Item|Hunter Item|Redeemer Item|Crusader Item|Searing Exarch Item|Eater of Worlds Item|Fractured Item|Synthesised Item|Historic|Primordial|Foil Unique.*|Veiled.*)$/i;function re(e,t){const n=e.split(`
+`).map(l=>l.trim()).filter(l=>l.length>0);if(n.length===0)return null;const r=n[0]?.match(/^Rarity:\s*(\w+)/i);if(!r?.[1])return null;const o=r[1].toUpperCase(),i=te(o),s=n[1]??"";let a,u;if(i)a=n[2]??"",u=a.length===0;else{const l=ee(t,s);a=l??s,u=l===null}const p=i?3:2;let f=0,y=-1;for(let l=p;l<n.length;l++){const d=n[l]?.match(/^Implicits:\s*(\d+)/i);if(d?.[1]){f=parseInt(d[1],10),y=l;break}}const C=[];if(y>=0)for(let l=y+1;l<n.length;l++){const d=n[l];!d||ne.test(d)||oe.test(d)||C.push({line:d,implicit:C.length<f})}return{rarity:o,name:s,base:a,baseUnknown:u,mods:C}}class g extends Error{code;constructor(t){super(t),this.name="PobError",this.code=t}}async function ie(e){const t=e.trim().replace(/\s+/g,"");if(!t)throw new g("empty");if(/^https?:\/\//i.test(t))throw new g("is-url");const n=t.replace(/-/g,"+").replace(/_/g,"/");let r;try{r=atob(n)}catch{throw new g("bad-base64")}const o=Uint8Array.from(r,i=>i.charCodeAt(0));if(typeof DecompressionStream>"u")throw new g("no-decompression");try{const i=new Blob([o]).stream().pipeThrough(new DecompressionStream("deflate")),s=await new Response(i).arrayBuffer();return new TextDecoder("utf-8").decode(s)}catch{throw new g("inflate-failed")}}const se=["Weapon 1","Weapon 2","Helmet","Body Armour","Gloves","Boots","Amulet","Ring 1","Ring 2","Belt","Flask 1","Flask 2","Flask 3","Flask 4","Flask 5","Weapon 1 Swap","Weapon 2 Swap"];function B(e){if(e.kind==="unequipped")return 900;if(e.kind==="tree-jewel")return 700;const t=se.indexOf(e.name);return t>=0?t:/Abyssal Socket/.test(e.name)?500:600}function ae(e,t){let n;try{n=new DOMParser().parseFromString(e,"application/xml")}catch{throw new g("bad-xml")}if(n.querySelector("parsererror"))throw new g("bad-xml");const r=new Map;for(const i of n.querySelectorAll("ItemSet Slot")){const s=i.getAttribute("itemId"),a=i.getAttribute("name");s&&s!=="0"&&a&&r.set(s,{kind:"equipment",name:a})}for(const i of n.querySelectorAll("Sockets Socket")){const s=i.getAttribute("itemId"),a=i.getAttribute("nodeId");s&&s!=="0"&&a&&!r.has(s)&&r.set(s,{kind:"tree-jewel",nodeId:a})}const o=[];for(const i of n.querySelectorAll("Items > Item")){const s=re(i.textContent??"",t);if(!s)continue;const a=i.getAttribute("id");o.push({...s,slot:a&&r.get(a)||{kind:"unequipped"}})}if(o.length===0)throw new g("no-items");return o.sort((i,s)=>B(i.slot)-B(s.slot)),o}function W(e){return e.replace(/\d+(\.\d+)?/g,"#")}function j(e){return e.toLowerCase().replace(/[0-9#.]+/g,"").replace(/[^a-z]/g,"")}function K(e){return e.replace(/^\{[^}]*\}\s*/,"").trim()}function ce(e){const t=[],n=new Map,r=new Map,o=new Map;for(const i of e.split(`
+`)){const s=i.indexOf("	");if(s<=0)continue;const a=i.slice(0,s),u=i.slice(s+1).trim();if(!u)continue;const p=t.push({text:a,hash:u})-1;r.has(a)||r.set(a,p);const f=W(a);n.has(f)||n.set(f,p);const y=j(a);o.has(y)||o.set(y,p)}return{entries:t,byNorm:n,byRaw:r,byKey:o}}function le(e,t){const r="^"+e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/#/g,"([+-]?\\d+(?:\\.\\d+)?)")+"$";try{const o=new RegExp(r).exec(t);if(o)return o.slice(1).map(Number)}catch{}return(t.match(/\d+(\.\d+)?/g)??[]).map(Number)}const ue={id:null,value:null};function de(e,t){const n=j(t);let r=e.byNorm.get(W(t));return r===void 0&&(r=e.byRaw.get(t)),r===void 0&&(r=e.byKey.get(n)),r===void 0&&(r=e.byKey.get(n+"s")),r===void 0&&n.endsWith("s")&&(r=e.byKey.get(n.slice(0,-1))),r===void 0?null:e.entries[r]??null}function V(e,t){const n=K(t.line),r=de(e,n);if(!r)return ue;const o=le(r.text,n);let i=null;return o.length>=2?i=((o[0]??0)+(o[1]??0))/2:o.length===1&&(i=o[0]??null),{id:(t.implicit?"implicit":"explicit")+".stat_"+r.hash,value:i}}function pe(e){return e!==null&&e<0?"max":"min"}function fe(e,t){if(e===0)return 0;const n=e*t;return Number.isInteger(e)?e>0?Math.max(1,Math.floor(n)):Math.min(-1,Math.ceil(n)):Math.round(n*100)/100}function me(e,t,n,r){if(k(r))return new Set;const o=e.map((i,s)=>s).filter(i=>t[i]?.id).sort((i,s)=>{const a=e[i]?.implicit?1:0,u=e[s]?.implicit?1:0;return a-u||i-s}).slice(0,n);return new Set(o)}function he(e,t){const n=[];for(const o of e.rows){if(!o.on||!o.id)continue;const i={id:o.id,disabled:!1};o.value!==null&&Number.isFinite(o.value)&&(i.value=o.cmp==="max"?{max:o.value}:{min:o.value}),n.push(i)}const r={query:{status:{option:t},stats:[{type:"and",filters:n}]},sort:{price:"asc"}};return k(e.rarity)?(r.query.name=e.name,r.query.type=e.base):(e.baseUnknown||(r.query.type=e.base),r.query.filters={type_filters:{filters:{rarity:{option:e.rarity==="MAGIC"?"magic":"nonunique"}}}}),r}const ye="https://www.pathofexile.com/trade/search";function be(e,t){const n=e.trim()||"Standard";return`${ye}/${encodeURIComponent(n)}?q=${encodeURIComponent(JSON.stringify(t))}`}async function ge(e){const t=await fetch(e);if(!t.ok)throw new Error(`取不到 ${e}（HTTP ${t.status}）`);return t.text()}function we(e){return document.getElementById(e)?.textContent??null}async function P(e,t,n){return we(e)??await ge(`${t}?v=${encodeURIComponent(n)}`)}async function ve(e){const[t,n]=await Promise.all([P("lut","stat-lut.tsv",e),P("bases","bases.tsv",e)]);return{stats:ce(t),bases:Z(n)}}function Ce(e){switch(e.kind){case"equipment":return e.name;case"tree-jewel":return`天赋树珠宝 ${e.nodeId}`;case"unequipped":return"（未装备）"}}function c(e,t,n){const r=document.createElement(e);return t&&(r.className=t),n!==void 0&&(r.textContent=n),r}function O(e){return c("span","badge",e)}function xe(e,t,n,r){const o=e.mods.map(d=>V(t,d)),i=me(e.mods,o,n.maxMods,e.rarity),s=k(e.rarity),a={rarity:e.rarity,name:e.name,base:e.base,baseUnknown:e.baseUnknown,rows:[]},u=c("div","card"),p=c("div","chead"),f=c("div");f.appendChild(c("div","slot",Ce(e.slot))),f.appendChild(c("div",`iname r-${e.rarity}`,e.name)),e.base&&e.base!==e.name&&f.appendChild(c("div","ibase",e.base)),e.baseUnknown&&f.appendChild(c("div","ibase warn","底子没认出来，搜索不限定底子（可能是新赛季底子，对照表该更新了）")),p.appendChild(f);const y=c("div","acts"),C=c("button",void 0,"官网搜索"),l=c("button","sec","复制");if(y.append(C,l),p.appendChild(y),u.appendChild(p),e.mods.length>0){const d=c("table","mods");e.mods.forEach((A,T)=>{const b=o[T],U=pe(b.value),x={on:i.has(T),id:b.id,cmp:U,value:b.value===null?null:fe(b.value,n.tolerance)};a.rows.push(x);const I=c("tr",A.implicit?"impl":void 0),F=c("td","num"),w=c("input");w.type="checkbox",w.checked=x.on,w.disabled=!b.id,F.appendChild(w),I.appendChild(F);const S=c("td","txt",K(A.line));A.implicit&&S.appendChild(O("植入")),b.id||(S.classList.add("nomatch"),S.appendChild(O("未识别"))),I.appendChild(S);const q=c("td","num");q.appendChild(c("span","cmp",b.id?U==="max"?"≤":"≥":""));const v=c("input");v.type="number",v.step="any",v.disabled=!b.id,x.value!==null&&(v.value=String(x.value)),q.appendChild(v),I.appendChild(q),w.addEventListener("change",()=>{x.on=w.checked,S.classList.toggle("off",!w.checked&&!!b.id)}),v.addEventListener("input",()=>{const N=parseFloat(v.value);x.value=Number.isFinite(N)?N:null}),d.appendChild(I)}),u.appendChild(d)}return u.appendChild(c("p","hint",s?"传奇按名字+底子精确搜索，词条默认不勾（勾上可再筛数值范围）":`默认勾选 ${n.maxMods} 条（词缀优先于植入），数值已按容差自动填。勾选和数值都可以改。`)),C.addEventListener("click",()=>r.onSearch(a)),l.addEventListener("click",()=>r.onCopy(a,l)),{node:u,state:a}}function Se(e,t,n,r,o){e.textContent="";const i=[],s=document.createDocumentFragment();for(const a of t){const{node:u,state:p}=xe(a,n,r,o);s.appendChild(u),i.push(p)}return e.appendChild(s),i}const ke={empty:"先粘贴 PoB 代码","is-url":"请粘贴代码本身，不是链接 —— 浏览器跨域读不到 pobb.in / pob.cool","bad-base64":"不是合法的 base64，检查有没有复制全","no-decompression":"浏览器太旧，不支持 DecompressionStream，请换 Chrome / Edge / Firefox 新版","inflate-failed":"解压失败，这可能不是一段 PoB 代码","bad-xml":"解出来的不是合法的 PoB 存档","no-items":"这段代码里没有任何装备"};function h(e){const t=document.getElementById(e);if(!t)throw new Error(`页面缺少 #${e}`);return t}const D=h("code"),R=h("league"),Ie=h("st"),Ee=h("tol"),Le=h("maxmods"),G=h("go"),$e=h("copyall"),_=h("status"),Ae=h("out");let L=null,$=[];function m(e,t=""){_.textContent=e,_.className=t}function qe(){return R.value}function Me(){return Ie.value}function M(e){return be(qe(),he(e,Me()))}function H(e,t){const n=parseFloat(e.value);return Number.isFinite(n)?n:t}async function Q(e){try{return await navigator.clipboard.writeText(e),!0}catch{return!1}}async function Re(){if(!L){m("对照表还没加载完，稍等一下","err");return}let e=D.value;if(X(e)){m("正在从链接取回 build…");try{e=await Y(e),D.value=e}catch(s){m(s instanceof E?s.message:`导入失败：${String(s)}`,"err");return}}m("解码中…");let t;try{const s=await ie(e);t=ae(s,L.bases)}catch(s){m(s instanceof g?ke[s.code]:`出错了：${String(s)}`,"err");return}const n=L.stats;$=Se(Ae,t,n,{tolerance:H(Ee,80)/100,maxMods:Math.max(1,Math.round(H(Le,4)))},{onSearch:s=>window.open(M(s),"_blank","noopener"),onCopy:async(s,a)=>{const u=await Q(M(s));a.textContent=u?"已复制":"失败",setTimeout(()=>a.textContent="复制",1500)}});let r=0,o=0,i=0;for(const s of t)if(r+=s.mods.length,!k(s.rarity))for(const a of s.mods)o++,V(n,a).id||i++;m(`解析出 ${t.length} 件装备，共 ${r} 条词条。稀有/魔法装备 ${o} 条里有 ${i} 条未识别（红色标出，需手动处理）；传奇按名字搜，词条不影响。`,"ok")}G.addEventListener("click",()=>{Re()});$e.addEventListener("click",()=>{(async()=>{if($.length===0){m("还没生成","err");return}const e=$.map(n=>`### ${n.name}${n.base&&n.base!==n.name?` | ${n.base}`:""}
+${M(n)}`).join(`
+
+`),t=await Q(e);m(t?`已复制 ${$.length} 条链接`:"复制失败",t?"ok":"err")})()});let z=!1;R.addEventListener("input",()=>{z=!0});async function Te(){const e=await J();if(!e)return;const t=h("leagues");t.textContent="";for(const n of e.leagues){const r=document.createElement("option");r.value=n.id,t.appendChild(r)}z||(R.value=e.current)}(async()=>{try{L=await ve("0.2.0"),G.disabled=!1,m("")}catch(e){m(`词条对照表加载失败：${String(e)}`,"err")}await Te()})();
+
+</script>
+  <style>
+:root{--bg:#e9eaee;--panel:#f5f6f8;--panel-2:#eceef2;--ink:#191c22;--muted:#5d6473;--faint:#868d9c;--line:#ccd1d9;--unique:#8d5117;--rare:#6f5f0c;--magic:#33409e;--normal:#4a4f5a;--modtext:#464f8c;--accent:#8d5117;--accent-ink:#fff;--ok:#2f6b46;--bad:#9c3025}@media(prefers-color-scheme:dark){:root{--bg:#13151a;--panel:#1a1d24;--panel-2:#20242c;--ink:#e3e6eb;--muted:#98a0af;--faint:#6f7787;--line:#2a2f39;--unique:#d08b4f;--rare:#ddd06a;--magic:#93a0ea;--normal:#b6bcc7;--modtext:#9aa4d6;--accent:#d08b4f;--accent-ink:#1a1206;--ok:#6cc08d;--bad:#e07a6c}}*{box-sizing:border-box}body{background:var(--bg);color:var(--ink);margin:0;font-family:Segoe UI Variable Text,Segoe UI,system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.5}.wrap{max-width:1000px;margin:0 auto;padding:0 20px 80px}header{border-bottom:1px solid var(--line);padding:22px 0 16px;margin-bottom:24px}h1{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-size:26px;margin:0 0 4px;font-weight:600}h1 small{display:block;font-size:12px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px;font-family:inherit}textarea{width:100%;min-height:96px;font-family:Cascadia Mono,Consolas,monospace;font-size:12px;padding:10px;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--ink);resize:vertical}.ctl{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:flex-end;margin:14px 0}.f{display:flex;flex-direction:column;gap:4px}.f label{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}input,select{font:inherit;font-size:14px;padding:6px 9px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:2px}input[type=number]{width:78px}#league{width:150px}button{font:inherit;font-size:13px;font-weight:600;padding:8px 16px;cursor:pointer;border-radius:2px;background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent)}button:hover:not(:disabled){filter:brightness(1.08)}button:disabled{opacity:.5;cursor:default}button.sec{background:transparent;color:var(--muted);border-color:var(--line);font-weight:400}button.sec:hover:not(:disabled){color:var(--ink);border-color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}#status{font-size:13px;color:var(--muted);margin:10px 0 0;min-height:20px}#status.err{color:var(--bad)}#status.ok{color:var(--ok)}.card{border:1px solid var(--line);border-radius:3px;background:var(--panel);padding:14px 16px;margin-bottom:12px}.chead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}.slot{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}.iname{font-family:Iowan Old Style,Palatino Linotype,Palatino,Georgia,serif;font-size:17px;font-weight:600;line-height:1.25}.r-UNIQUE,.r-RELIC{color:var(--unique)}.r-RARE{color:var(--rare)}.r-MAGIC{color:var(--magic)}.r-NORMAL{color:var(--normal)}.ibase{font-size:13px;color:var(--muted)}.ibase.warn{color:var(--bad);font-size:12px}.acts{display:flex;gap:6px;align-items:center;flex-shrink:0}table.mods{width:100%;border-collapse:collapse;margin-top:11px;font-family:Cascadia Mono,Consolas,monospace;font-size:12px}table.mods td{padding:3px 6px 3px 0;vertical-align:middle;border-top:1px solid var(--line)}table.mods tr:first-child td{border-top:none}td.txt{color:var(--modtext);width:100%}td.txt.off{color:var(--faint);text-decoration:line-through}td.txt.nomatch{color:var(--bad);text-decoration:none}td.num{white-space:nowrap}td.num input{width:66px;font-size:11.5px;padding:3px 5px;font-family:inherit}.cmp{color:var(--faint);font-size:11px;margin-right:3px}.badge{display:inline-block;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);color:var(--faint);padding:0 4px;border-radius:2px;margin-left:6px;font-family:Segoe UI,sans-serif;vertical-align:1px}.hint{font-size:12px;color:var(--faint);margin:9px 0 0}.empty{color:var(--faint);font-size:14px;padding:30px 0;text-align:center}@media(max-width:640px){.wrap{padding:0 12px 60px}h1{font-size:21px}.chead{flex-direction:column;gap:8px}.acts{width:100%}.acts button{flex:1}.ctl{gap:10px 12px}#league{width:120px}table.mods{font-size:11px}td.num input{width:56px}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>PoB 配装采购单生成器<small>粘贴 PoB 代码 → 每件装备一条交易站搜索</small></h1>
+</header>
+
+<textarea id="code" spellcheck="false" placeholder="粘贴 Path of Building 导出代码（PoB 里 Import/Export → Generate → 复制那串长字符；poe.ninja 的「Copy build code」也一样）&#10;&#10;也可以直接贴 pobb.in / pastebin 的分享链接。"></textarea>
+
+<div class="ctl">
+  <div class="f"><label for="league">赛季</label>
+    <input id="league" value="Allflame" spellcheck="false" list="leagues" autocomplete="off">
+    <datalist id="leagues"></datalist></div>
+  <div class="f"><label for="st">挂单</label>
+    <select id="st">
+      <option value="securable" selected>一口价</option>
+      <option value="available">一口价+当面</option>
+      <option value="onlineleague">在线(本赛季)</option>
+      <option value="online">在线(全部)</option>
+      <option value="any">全部</option>
+    </select></div>
+  <div class="f"><label for="tol">容差 %</label><input id="tol" type="number" value="80" min="10" max="100" step="5"></div>
+  <div class="f"><label for="maxmods">每件最多筛几条</label><input id="maxmods" type="number" value="4" min="1" max="8"></div>
+  <div class="f"><label>&nbsp;</label><button id="go" disabled>生成</button></div>
+  <div class="f"><label>&nbsp;</label><button id="copyall" class="sec">复制全部链接</button></div>
+</div>
+<p id="status">正在加载词条对照表…</p>
+
+<div id="out"><p class="empty">粘贴代码后点「生成」</p></div>
+</div>
+
 </body>
 </html>

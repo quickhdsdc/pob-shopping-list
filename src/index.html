@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoB 配装采购单生成器</title>
+<meta name="description" content="粘贴一段 Path of Building 代码，为每件装备生成一条流放之路交易站搜索链接。">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>PoB 配装采购单生成器<small>粘贴 PoB 代码 → 每件装备一条交易站搜索</small></h1>
+</header>
+
+<textarea id="code" spellcheck="false" placeholder="粘贴 Path of Building 导出代码（PoB 里 Import/Export → Generate → 复制那串长字符；poe.ninja 的「Copy build code」也一样）&#10;&#10;也可以直接贴 pobb.in / pastebin 的分享链接。"></textarea>
+
+<div class="ctl">
+  <div class="f"><label for="league">赛季</label>
+    <input id="league" value="Allflame" spellcheck="false" list="leagues" autocomplete="off">
+    <datalist id="leagues"></datalist></div>
+  <div class="f"><label for="st">挂单</label>
+    <select id="st">
+      <option value="securable" selected>一口价</option>
+      <option value="available">一口价+当面</option>
+      <option value="onlineleague">在线(本赛季)</option>
+      <option value="online">在线(全部)</option>
+      <option value="any">全部</option>
+    </select></div>
+  <div class="f"><label for="tol">容差 %</label><input id="tol" type="number" value="80" min="10" max="100" step="5"></div>
+  <div class="f"><label for="maxmods">每件最多筛几条</label><input id="maxmods" type="number" value="4" min="1" max="8"></div>
+  <div class="f"><label>&nbsp;</label><button id="go" disabled>生成</button></div>
+  <div class="f"><label>&nbsp;</label><button id="copyall" class="sec">复制全部链接</button></div>
+</div>
+<p id="status">正在加载词条对照表…</p>
+
+<div id="out"><p class="empty">粘贴代码后点「生成」</p></div>
+</div>
+
+<script type="module" src="./main.ts"></script>
+</body>
+</html>

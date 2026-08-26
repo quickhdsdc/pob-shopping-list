@@ -1,0 +1,34 @@
+{
+  "name": "pob-shopping-list",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "把别人的 Path of Building 配装变成一整套交易站搜索链接",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run typecheck && vite build",
+    "build:single": "npm run build && node tools/build-single.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:smoke": "powershell -ExecutionPolicy Bypass -File test/smoke.ps1",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
+    "data": "bash tools/extract-lut.sh && bash tools/extract-bases.sh",
+    "test:offline": "powershell -ExecutionPolicy Bypass -File test/offline.ps1",
+    "worker:dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260825.1",
+    "@types/node": "^22.10.2",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8",
+    "wrangler": "^4.126.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
