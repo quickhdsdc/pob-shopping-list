@@ -68,6 +68,17 @@ function flipPolarity(text: string): string | null {
   return null;
 }
 
+/**
+ * 物品文本用冠词表示「一个」，交易站统一写成带数字的复数形式：
+ * 「You can apply an additional Curse」对应「You can apply # additional Curses」。
+ *
+ * 换成 1 之后既能走单复数容错命中，取值也能拿到 1。
+ */
+function articleToOne(text: string): string | null {
+  const out = text.replace(/\b[Aa]n?\b/g, '1');
+  return out === text ? null : out;
+}
+
 export function buildStatIndex(tsv: string): StatIndex {
   const entries: StatEntry[] = [];
   const byNorm = new Map<string, number>();
@@ -149,14 +160,22 @@ interface Hit {
   readonly negate: boolean;
 }
 
+/**
+ * 按可信度从高到低试几种改写：原文 -> 冠词换成 1 -> 极性翻译。
+ * 改写只在前一种查不到时才试，避免抢掉本来就正确的匹配。
+ */
 function lookup(index: StatIndex, raw: string): Hit | null {
-  const direct = lookupExact(index, raw);
-  if (direct) return { entry: direct, text: raw, negate: false };
+  const candidates: { text: string; negate: boolean }[] = [{ text: raw, negate: false }];
+
+  const withOne = articleToOne(raw);
+  if (withOne) candidates.push({ text: withOne, negate: false });
 
   const flipped = flipPolarity(raw);
-  if (flipped) {
-    const hit = lookupExact(index, flipped);
-    if (hit) return { entry: hit, text: flipped, negate: true };
+  if (flipped) candidates.push({ text: flipped, negate: true });
+
+  for (const { text, negate } of candidates) {
+    const entry = lookupExact(index, text);
+    if (entry) return { entry, text, negate };
   }
   return null;
 }

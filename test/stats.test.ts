@@ -109,6 +109,25 @@ describe('对照表匹配', () => {
     expect(m.value).toBe(10);   // 正值 —— 说明走的是直接匹配，没被翻译成 -10
   });
 
+  it('冠词当 1：an additional Curse ↔ # additional Curses', () => {
+    // 物品上是「an additional Curse」（冠词 + 单数），交易站是
+    // 「# additional Curses」（数字 + 复数），差了一个冠词和一个复数 s。
+    const m = matchMod(idx, { line: 'You can apply an additional Curse', implicit: true });
+    expect(m.id).toBe('implicit.stat_30642521');
+    expect(m.value).toBe(1);
+  });
+
+  it('PoB 镜像缺的新词条，官方源里有', () => {
+    // 这条曾经识别不了 —— 不是匹配逻辑的问题，是对照表当时从 PoB 的
+    // TradeSiteStats.lua 提取，那份镜像过期了。现在直接从官方接口拉。
+    const m = matchMod(idx, {
+      line: 'While a Pinnacle Atlas Boss is in your Presence, 85% chance to Unnerve Enemies for 4 seconds on Hit',
+      implicit: true,
+    });
+    expect(m.id).toBe('implicit.stat_4018420421');
+    expect(m.value).toBe(85);
+  });
+
   it('对照表里带「#% chance to」前缀的，写死 100% 的那版认不出来', () => {
     // 已知缺口，不是回归：手套上的 `Curse Enemies with Punishment on Hit` 是
     // 必定触发版，对照表里只有 `#% chance to Curse Enemies with Punishment on Hit`。

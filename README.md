@@ -68,7 +68,7 @@ const xml = new TextDecoder().decode(await new Response(stream).arrayBuffer());
 
 ### 2. 词条文本 → 交易站 stat id
 
-这是唯一有难度的一环。内嵌了 7,763 条对照表（`data/stat-lut.tsv`），**三级匹配**：
+这是唯一有难度的一环。内嵌了 7,980 条对照表（`data/stat-lut.tsv`，直接从官方 `api/trade/data/stats` 提取），**三级匹配**：
 
 | 级别 | 做法                       | 解决的问题                                                      |
 | ---- | -------------------------- | --------------------------------------------------------------- |
@@ -77,7 +77,7 @@ const xml = new TextDecoder().decode(await new Response(stream).arrayBuffer());
 | 3    | 抽掉全部数字的规范键       | `8% chance to gain Phasing for 4 seconds on Kill` —— 混合型      |
 | 3b   | 单复数容错                 | `Has 1 Abyssal Socket` ↔ `Has # Abyssal Sockets`                 |
 
-第 3 级规范键的碰撞率实测 **39 / 7763 = 0.5%**，碰撞的基本都是「本地 vs 全局格挡」这类本就有歧义的词条。
+第 3 级规范键的碰撞率实测约 **0.5%**，碰撞的基本都是「本地 vs 全局格挡」这类本就有歧义的词条。
 
 匹配上之后还得挑**命名空间**：id 的形状是 `<命名空间>.stat_<hash>`，而不是每个 hash
 在每个命名空间里都存在。星团珠宝的 `Adds # Passive Skills` 只有 `explicit` 和
@@ -89,8 +89,8 @@ const xml = new TextDecoder().decode(await new Response(stream).arrayBuffer());
 ### 2b. 魔法装备的底子
 
 魔法装备在 PoB 里只有一行名字 —— `Flagellant's Quicksilver Flask of Incision` ——
-而交易站的 `type` 只认底子本身。内嵌了 1,106 条底子物品表（`data/bases.tsv`，
-从 PoB 的 `Data/Bases/*.lua` 提取），按名字从长到短做词边界匹配，
+而交易站的 `type` 只认底子本身。内嵌了 1,088 条底子物品表（`data/bases.tsv`，从官方 `api/trade/data/items` 提取 ——
+那里的名字就是交易站真正接受的底子名），按名字从长到短做词边界匹配，
 剥出 `Quicksilver Flask`（`Large Cluster Jewel` 会优先于 `Cluster Jewel`）。
 
 认不出来的底子**宁可不写 `type`**，让搜索宽一点，也不写个不存在的底子搜出空结果；
@@ -199,7 +199,7 @@ npm install
 
 npm run dev              # 前端开发服务器（没有 /api，赛季和链接导入自动降级）
 npm run worker:dev       # 连 Worker 一起跑，本地就有 /api/leagues 和 /api/import
-npm test                 # 单元 + 集成测试（111 个用例，不需要浏览器）
+npm test                 # 单元 + 集成测试（113 个用例，不需要浏览器）
 npm run build            # 产出 dist/
 npm run build:single     # 再把一切压成根目录的 index.html
 npm run deploy           # 部署到 Cloudflare（需要先 wrangler login）
@@ -248,11 +248,11 @@ npm run test:offline     # 单文件版在 file:// 下能不能跑起来（需�
 │   ├── leagues.ts              # 赛季列表
 │   └── import.ts               # 分享链接 -> PoB 代码（含域名白名单）
 ├── data/
-│   ├── stat-lut.tsv            # 词条文本 -> stat hash + 命名空间（7,763 条）
-│   └── bases.tsv               # 底子物品名 -> 类别（1,106 条）
+│   ├── stat-lut.tsv            # 词条文本 -> stat hash + 命名空间（7,980 条）
+│   └── bases.tsv               # 底子物品名 -> 类别（1,088 条）
 ├── tools/
-│   ├── extract-lut.sh          # 从 PoB 的 TradeSiteStats.lua 重新生成词条表
-│   ├── extract-bases.sh        # 从 PoB 的 Data/Bases/*.lua 重新生成底子表
+│   ├── extract-lut.mjs         # 从官方 api/trade/data/stats 重建词条表
+│   ├── extract-bases.mjs       # 从官方 api/trade/data/items 重建底子表
 │   └── build-single.mjs        # 把 dist/ 压成单文件
 ├── test/
 │   ├── *.test.ts               # vitest
@@ -265,13 +265,16 @@ npm run test:offline     # 单文件版在 file:// 下能不能跑起来（需�
 
 ### 赛季更新后
 
-GGG 加了新词条或新底子时：先更新 PoB 到最新版，然后
+GGG 加了新词条或新底子时：
 
 ```bash
-npm run data             # 重新提取两张表
+npm run data             # 从官方接口重建两张表
 npm run build:single     # 重新构建
 npm test
 ```
+
+两张表都直接从官方 `api/trade/data/*` 拉，**不需要本地装 PoB**，所以这一步
+可以放进定时任务自动跑。
 
 界面上出现「底子没认出来」的红字，就是底子表该更新了。
 

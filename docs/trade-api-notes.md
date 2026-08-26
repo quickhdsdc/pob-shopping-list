@@ -3,6 +3,28 @@
 这些是实现过程中从 Path of Building Community 源码和官方 API 里核实过的细节，
 记下来省得下次再翻一遍。
 
+## 数据从哪来：只信官方端点
+
+两张对照表都从官方拉，**不要从 PoB 的 `Data/TradeSiteStats.lua` 提取**：
+
+| 表 | 端点 |
+| --- | --- |
+| 词条 -> stat id | `https://www.pathofexile.com/api/trade/data/stats` |
+| 底子物品 | `https://www.pathofexile.com/api/trade/data/items` |
+
+PoB 那份文件是这个接口的镜像，**会过期**。实测它缺了
+`While a Pinnacle Atlas Boss is in your Presence, #% chance to Unnerve Enemies for 4 seconds on Hit`
+（官方有 `implicit.stat_4018420421`），界面上标红说识别不了，实际交易站搜得到。
+官方 18183 条 stat，筛掉带选项索引和过长的之后剩 7980 条。
+
+底子表同理：`items` 端点里 `name` 为空的条目就是底子，**那里的名字就是交易站
+真正接受的 `type`**。PoB 的 `Data/Bases/*.lua` 里有 `Energy Blade One Handed`
+这种内部命名，写进 `type` 搜不出任何东西。
+
+另外这两个端点都不需要认证，所以数据更新可以放进定时任务，不依赖本地装没装 PoB。
+
+---
+
 ## URL 形状
 
 ```
