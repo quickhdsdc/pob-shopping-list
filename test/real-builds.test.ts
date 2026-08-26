@@ -36,7 +36,7 @@ describe.each(realBuilds())('真实 build: $name', ({ code }) => {
     }
   });
 
-  it('稀有/魔法装备的识别率不低于 75%', () => {
+  it('稀有/魔法装备的识别率不低于 80%', () => {
     let total = 0;
     let unmatched = 0;
     for (const item of items) {
@@ -47,9 +47,9 @@ describe.each(realBuilds())('真实 build: $name', ({ code }) => {
       }
     }
     if (total === 0) return; // 全传奇的 build，没什么可算的
-    // 75 而不是更高：剩下的缺口几乎全是交易站的 enchant.* 类词条（药剂附魔、
-    // 星团珠宝的小点词缀），对照表根本没收。补上了就能把这个门槛提上去。
-    expect((1 - unmatched / total) * 100).toBeGreaterThanOrEqual(75);
+    // 80 而不是更高：剩下的缺口是带选项索引的 enchant 词条（星团珠宝的小点
+    // 词缀），需要界面上能选具体是哪一条，见 docs/trade-api-notes.md。
+    expect((1 - unmatched / total) * 100).toBeGreaterThanOrEqual(80);
   });
 
   describe('生成的查询', () => {

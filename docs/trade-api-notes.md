@@ -144,9 +144,10 @@ explicit.stat_4089743927|2|131
 
 ---
 
-## 词条 id 的三种前缀
+## 命名空间前缀：不能靠猜
 
-`explicit` / `implicit` / `fractured` **共用同一个 hash**，只是前缀不同：
+stat id 的形状是 `<命名空间>.stat_<hash>`。很多词条确实是几个命名空间共用一个
+hash，只换前缀：
 
 ```
 explicit.stat_3527617737   Has # Abyssal Sockets
@@ -154,5 +155,33 @@ implicit.stat_3527617737   Has # Abyssal Sockets
 fractured.stat_3527617737  Has # Abyssal Sockets
 ```
 
-所以对照表只存 hash，运行时按词条在物品文本里的位置
-（`Implicits: N` 之后的前 N 行是植入）补前缀即可。
+**但不是每个 hash 在每个命名空间里都存在**，这一点最早被我漏掉，代价是一个
+线上 bug：
+
+```
+Adds # Passive Skills   ->  explicit.stat_3086156145   ✓ 存在
+                            enchant.stat_3086156145    ✓ 存在
+                            implicit.stat_3086156145   ✗ 不存在
+```
+
+星团珠宝的「Adds 5 Passive Skills」写在物品文本的 `Implicits:` 区段里。按位置
+拼前缀就拼出了 `implicit.stat_3086156145` —— 交易站**不报错**，只是把这条筛选
+显示成 "Unavailable Stat"，然后整个搜索的结果就不对了。这种错比搜不到更难发现。
+
+所以对照表存三列：`文本 	 hash 	 该 hash 实际支持的命名空间`。运行时按词条
+位置猜一个（植入区段猜 `implicit`，其余猜 `explicit`），**猜的那个不在支持列表里
+就退到 `enchant`** —— 物品文本的植入区段里除了真植入词条，还塞着附魔：
+
+| 写在 `Implicits:` 区段里，但交易站算 enchant | 出现在 |
+| --- | --- |
+| `Adds # Passive Skills` | 星团珠宝 |
+| `Used when Charges reach full` | 药剂附魔 |
+
+`test/stats.test.ts` 里有一条不变式测试，把对照表**每一条**词条在两种位置下都跑
+一遍，断言生成的 `命名空间.hash` 组合真实存在。
+
+### 带选项索引的还是不支持
+
+`enchant.stat_3948993189|5` 这种「一个 id + 选项索引」的结构（具体是哪条星团小点
+词缀）需要界面上能选，提取时直接跳过了。星团珠宝的
+`Added Small Passive Skills grant: ...` 至今识别不了，就是这个原因。

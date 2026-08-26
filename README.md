@@ -68,7 +68,7 @@ const xml = new TextDecoder().decode(await new Response(stream).arrayBuffer());
 
 ### 2. 词条文本 → 交易站 stat id
 
-这是唯一有难度的一环。内嵌了 7,731 条对照表（`data/stat-lut.tsv`），**三级匹配**：
+这是唯一有难度的一环。内嵌了 7,763 条对照表（`data/stat-lut.tsv`），**三级匹配**：
 
 | 级别 | 做法                       | 解决的问题                                                      |
 | ---- | -------------------------- | --------------------------------------------------------------- |
@@ -77,8 +77,14 @@ const xml = new TextDecoder().decode(await new Response(stream).arrayBuffer());
 | 3    | 抽掉全部数字的规范键       | `8% chance to gain Phasing for 4 seconds on Kill` —— 混合型      |
 | 3b   | 单复数容错                 | `Has 1 Abyssal Socket` ↔ `Has # Abyssal Sockets`                 |
 
-只用第 1 级时未识别 56 条；加到三级后降到 18 条。
-第 3 级规范键的碰撞率实测 **39 / 7731 = 0.5%**，碰撞的基本都是「本地 vs 全局格挡」这类本就有歧义的词条。
+第 3 级规范键的碰撞率实测 **39 / 7763 = 0.5%**，碰撞的基本都是「本地 vs 全局格挡」这类本就有歧义的词条。
+
+匹配上之后还得挑**命名空间**：id 的形状是 `<命名空间>.stat_<hash>`，而不是每个 hash
+在每个命名空间里都存在。星团珠宝的 `Adds # Passive Skills` 只有 `explicit` 和
+`enchant`，没有 `implicit` —— 早期版本按词条位置盲目拼前缀，拼出的 id 交易站**不报错**，
+只是显示成 "Unavailable Stat"，搜索结果整个不对。所以对照表存三列（文本 / hash /
+该 hash 实际支持的命名空间），猜的那个不在列表里就退到 `enchant`。
+细节见 [docs/trade-api-notes.md](docs/trade-api-notes.md)。
 
 ### 2b. 魔法装备的底子
 
@@ -123,8 +129,8 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
 ```
 装备数        : 44
 稀有/魔法词条 : 149
-未识别        : 15
-识别率        : 90%
+未识别        : 12
+识别率        : 92%
 生成的链接数  : 44
 ```
 
@@ -171,9 +177,8 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
 ## 已知限制
 
 - **星团珠宝的小点词缀**（`Added Small Passive Skills grant: ...`）识别不了。
-  它们在交易站属于 `enchant.*` 类型且带选项索引，当前对照表只收了 `explicit` / `implicit` / `fractured`。
-  **这是下一步最值得补的一块。**
-- **药剂附魔**（`Used when Charges reach full`）同上，不过本来也没必要搜。
+  它们的 id 带选项索引（`enchant.stat_3948993189|49`，索引表示具体是哪一条小点词缀），
+  需要界面上能选，提取时直接跳过了。**这是下一步最值得补的一块。**
 - **传奇的多行词条**会被拆成两行导致识别失败 —— 无影响，传奇按名字搜。
 - **链接导入只支持 pobb.in 和 pastebin**。poe.ninja / pob.cool / poeplanner / maxroll
   这些站取不到原始代码，界面上会提示去点它们自己的「复制代码」按钮。
@@ -194,7 +199,7 @@ npm install
 
 npm run dev              # 前端开发服务器（没有 /api，赛季和链接导入自动降级）
 npm run worker:dev       # 连 Worker 一起跑，本地就有 /api/leagues 和 /api/import
-npm test                 # 单元 + 集成测试（85 个用例，不需要浏览器）
+npm test                 # 单元 + 集成测试（111 个用例，不需要浏览器）
 npm run build            # 产出 dist/
 npm run build:single     # 再把一切压成根目录的 index.html
 npm run deploy           # 部署到 Cloudflare（需要先 wrangler login）
@@ -243,7 +248,7 @@ npm run test:offline     # 单文件版在 file:// 下能不能跑起来（需�
 │   ├── leagues.ts              # 赛季列表
 │   └── import.ts               # 分享链接 -> PoB 代码（含域名白名单）
 ├── data/
-│   ├── stat-lut.tsv            # 词条文本 -> 交易站 stat hash（7,731 条）
+│   ├── stat-lut.tsv            # 词条文本 -> stat hash + 命名空间（7,763 条）
 │   └── bases.tsv               # 底子物品名 -> 类别（1,106 条）
 ├── tools/
 │   ├── extract-lut.sh          # 从 PoB 的 TradeSiteStats.lua 重新生成词条表

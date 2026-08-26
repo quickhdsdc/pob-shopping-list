@@ -117,15 +117,77 @@ describe('对照表匹配', () => {
   });
 });
 
+describe('命名空间', () => {
+  const idx = stats();
+
+  it('植入位置的词条，hash 有 implicit 就用 implicit', () => {
+    expect(matchMod(idx, { line: '+134 to maximum Life', implicit: true }).id)
+      .toBe('implicit.stat_3299347043');
+  });
+
+  it('植入位置但 hash 没有 implicit 时，退到 enchant', () => {
+    // 交易站上这条真出过问题：星团珠宝的「Adds 5 Passive Skills」在物品文本的
+    // Implicits: 区段里，按位置拼成 implicit.stat_3086156145 —— 这个 id 不存在，
+    // 交易站显示 "Unavailable Stat" 而且不报错。它实际只有 explicit 和 enchant。
+    const m = matchMod(idx, { line: 'Adds 5 Passive Skills', implicit: true });
+    expect(m.id).toBe('enchant.stat_3086156145');
+    expect(m.value).toBe(5);
+  });
+
+  it('词缀位置的同一条词条用 explicit', () => {
+    expect(matchMod(idx, { line: 'Adds 5 Passive Skills', implicit: false }).id)
+      .toBe('explicit.stat_3086156145');
+  });
+
+  it('只存在于 enchant 的词条，两种位置都给 enchant', () => {
+    // 药剂附魔，之前整条被提取脚本过滤掉，根本匹配不上
+    expect(matchMod(idx, { line: 'Used when Charges reach full', implicit: true }).id)
+      .toBe('enchant.stat_3287581721');
+    expect(matchMod(idx, { line: 'Used when Charges reach full', implicit: false }).id)
+      .toBe('enchant.stat_3287581721');
+  });
+
+  it('生成的「命名空间.hash」组合在对照表里一定真实存在', () => {
+    // 这才是要守的不变式：交易站认不认这个 id。
+    // 不能拿遍历到的 entry 去比 —— 匹配可能经规范键或 (Local) 那条路
+    // 命中另一条同义 entry，那是允许的。
+    const known = new Map<string, Set<string>>();
+    for (const e of idx.entries) {
+      const set = known.get(e.hash) ?? new Set<string>();
+      for (const ns of e.namespaces) set.add(ns);
+      known.set(e.hash, set);
+    }
+
+    let checked = 0;
+    for (const entry of idx.entries) {
+      for (const implicit of [true, false]) {
+        const id = matchMod(idx, { line: entry.text.replace(/#/g, '1'), implicit }).id;
+        if (!id) continue;
+        const [ns, stat] = id.split('.');
+        expect(known.get(stat!.replace(/^stat_/, ''))).toContain(ns);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(10_000);   // 确认真的遍历过了
+  });
+});
+
 describe('索引构建', () => {
   it('跳过残缺行', () => {
-    const idx = buildStatIndex('没有制表符\n\n+# to maximum Life\t3299347043\n带空 hash 的\t\n');
+    const idx = buildStatIndex(
+      '没有制表符\n\n+# to maximum Life\t3299347043\texplicit\n带空 hash 的\t\texplicit\n没有命名空间的\t123\t\n',
+    );
     expect(idx.entries).toHaveLength(1);
   });
 
   it('同一个键撞上时保留先来的', () => {
-    const idx = buildStatIndex('+# to X\taaa\n+# to X\tbbb\n');
+    const idx = buildStatIndex('+# to X\taaa\texplicit\n+# to X\tbbb\texplicit\n');
     expect(idx.entries).toHaveLength(2);
     expect(idx.entries[idx.byNorm.get('+# to X')!]!.hash).toBe('aaa');
+  });
+
+  it('命名空间列拆成数组', () => {
+    const idx = buildStatIndex('+# to X\taaa\texplicit,enchant\n');
+    expect(idx.entries[0]!.namespaces).toEqual(['explicit', 'enchant']);
   });
 });

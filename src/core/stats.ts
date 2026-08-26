@@ -9,8 +9,17 @@
 export interface StatEntry {
   /** 对照表里的文本，可变数字是 `#` */
   readonly text: string;
-  /** 不带 `explicit.stat_` 前缀的 hash */
+  /** 不带命名空间前缀的 hash */
   readonly hash: string;
+  /**
+   * 这个 hash **实际存在**于哪些命名空间，按固定优先级排好。
+   *
+   * 交易站的 id 是 `<命名空间>.stat_<hash>`，而不是每个 hash 在每个命名空间
+   * 里都有。星团珠宝的「Adds # Passive Skills」只有 explicit 和 enchant，
+   * 没有 implicit —— 按词条位置盲目拼前缀会拼出不存在的 id，交易站上显示成
+   * "Unavailable Stat"，而且不报错。
+   */
+  readonly namespaces: readonly string[];
 }
 
 export interface StatIndex {
@@ -66,12 +75,11 @@ export function buildStatIndex(tsv: string): StatIndex {
   const byKey = new Map<string, number>();
 
   for (const line of tsv.split('\n')) {
-    const i = line.indexOf('\t');
-    if (i <= 0) continue;
-    const text = line.slice(0, i);
-    const hash = line.slice(i + 1).trim();
-    if (!hash) continue;
-    const idx = entries.push({ text, hash }) - 1;
+    const [text, hash, ns] = line.split('\t');
+    if (!text || !hash) continue;
+    const namespaces = (ns ?? '').trim().split(',').filter(Boolean);
+    if (namespaces.length === 0) continue;
+    const idx = entries.push({ text, hash: hash.trim(), namespaces }) - 1;
     // 先来的优先：对照表已按字典序去重，同一个键撞上时保留第一个
     if (!byRaw.has(text)) byRaw.set(text, idx);
     const n = normalizeNumbers(text);
@@ -153,6 +161,25 @@ function lookup(index: StatIndex, raw: string): Hit | null {
   return null;
 }
 
+/**
+ * 词条位置猜出来的命名空间不存在时的退路。
+ *
+ * enchant 排第一：物品文本的 `Implicits:` 区段里除了真植入词条，还塞着附魔
+ * （星团珠宝的「Adds # Passive Skills」、药剂的「Used when Charges reach full」），
+ * 它们在交易站属于 enchant。
+ */
+const NAMESPACE_FALLBACK = ['enchant', 'explicit', 'fractured', 'implicit', 'crafted'] as const;
+
+/** 按词条在物品文本里的位置猜一个命名空间，猜的那个不存在就退而求其次 */
+export function namespaceFor(entry: StatEntry, implicit: boolean): string | null {
+  const wanted = implicit ? 'implicit' : 'explicit';
+  if (entry.namespaces.includes(wanted)) return wanted;
+  for (const ns of NAMESPACE_FALLBACK) {
+    if (entry.namespaces.includes(ns)) return ns;
+  }
+  return null;
+}
+
 export function matchMod(
   index: StatIndex,
   mod: { readonly line: string; readonly implicit: boolean },
@@ -161,6 +188,9 @@ export function matchMod(
   const hit = lookup(index, raw);
   if (!hit) return NO_MATCH;
 
+  const ns = namespaceFor(hit.entry, mod.implicit);
+  if (!ns) return NO_MATCH;
+
   const vals = extractValues(hit.entry.text, hit.text);
   let value: number | null = null;
   // `Adds A to B` 这类两个数取平均 —— 交易站也是这么算的
@@ -168,5 +198,5 @@ export function matchMod(
   else if (vals.length === 1) value = vals[0] ?? null;
   if (value !== null && hit.negate) value = -value;
 
-  return { id: (mod.implicit ? 'implicit' : 'explicit') + '.stat_' + hit.entry.hash, value };
+  return { id: `${ns}.stat_${hit.entry.hash}`, value };
 }
