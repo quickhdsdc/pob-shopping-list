@@ -129,10 +129,13 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
 ```
 装备数        : 44
 稀有/魔法词条 : 149
-未识别        : 4
-识别率        : 97%
+未识别        : 1
+识别率        : 99%
 生成的链接数  : 44
 ```
+
+另一套来自 poe.ninja 的 23 件装备配装（`test/ninja-build.pobcode`）：67 条词条，
+**未识别 0 条，识别率 100%**。
 
 传奇装备识别率视作 100% —— 它们按名字 + 底子搜，词条识别与否不影响结果。
 
@@ -176,10 +179,9 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
 
 ## 已知限制
 
-- 剩下认不出来的是交易站的 stat 列表里**确实没有对应文本**的那几条，比如药剂的
-  `Gain # Charges when you are Hit by an Enemy`、必定触发版的
-  `Curse Enemies with Punishment on Hit`（列表里只有 `#% chance to` 那版）。
-  这些不是匹配缺陷，是交易站本身搜不了。
+- 剩下认不出来的是交易站的 stat 列表里**确实没有对应文本**的：必定触发版的
+  `Curse Enemies with Punishment on Hit`（列表里只有 `#% chance to` 那版，
+  **是另一个词条**）。硬匹配过去会生成错的查询，所以故意不匹配、界面上标红。
 - **传奇的多行词条**会被拆成两行导致识别失败 —— 无影响，传奇按名字搜。
 - **链接导入只支持 pobb.in 和 pastebin**。poe.ninja / pob.cool / poeplanner / maxroll
   这些站取不到原始代码，界面上会提示去点它们自己的「复制代码」按钮。
@@ -200,7 +202,7 @@ npm install
 
 npm run dev              # 前端开发服务器（没有 /api，赛季和链接导入自动降级）
 npm run worker:dev       # 连 Worker 一起跑，本地就有 /api/leagues 和 /api/import
-npm test                 # 单元 + 集成测试（117 个用例，不需要浏览器）
+npm test                 # 单元 + 集成测试（119 个用例，不需要浏览器）
 npm run build            # 产出 dist/
 npm run build:single     # 再把一切压成根目录的 index.html
 npm run deploy           # 部署到 Cloudflare（需要先 wrangler login）
@@ -261,7 +263,9 @@ npm run test:offline     # 单文件版在 file:// 下能不能跑起来（需�
 │   ├── offline.ps1             # 单文件版的浏览器冒烟测试
 │   └── sample-build.pobcode    # 测试用 PoB 代码
 └── docs/
-    └── trade-api-notes.md      # 交易站查询格式笔记
+    ├── trade-api-notes.md      # 交易站查询格式笔记（踩坑记录在这）
+    ├── PROGRESS.md             # 开发进度，给自己看的
+    └── design-brief.md         # 界面重做的设计简报
 ```
 
 ### 赛季更新后

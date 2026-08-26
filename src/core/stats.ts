@@ -30,6 +30,8 @@ export interface StatIndex {
   readonly byRaw: ReadonlyMap<string, number>;
   /** 抽掉全部数字和标点、只剩小写字母的规范键 -> entries 下标 */
   readonly byKey: ReadonlyMap<string, number>;
+  /** 再削掉每个词的复数 s 之后的键 -> entries 下标，最松的一档 */
+  readonly byDeplural: ReadonlyMap<string, number>;
 }
 
 /** 数字全部换成 `#`：`+134 to maximum Life` -> `+# to maximum Life` */
@@ -40,6 +42,35 @@ export function normalizeNumbers(text: string): string {
 /** 抽掉数字和标点的规范键，用于混合型词条的兜底匹配 */
 export function canonicalKey(text: string): string {
   return text.toLowerCase().replace(/[0-9#.]+/g, '').replace(/[^a-z]/g, '');
+}
+
+/**
+ * 最松的一档键：削掉每个词的复数 s，再丢掉冠词和系动词。
+ *
+ * 交易站的文本用 `#` 占位，整句就按占位符写成复数，物品上写的是单数：
+ *
+ * | 物品 | 交易站 |
+ * | --- | --- |
+ * | `Gain 3 Charges when you are Hit by an Enemy` | `Gain # Charge when you are Hit by an Enemy` |
+ * | `1 Added Passive Skill is a Jewel Socket` | `# Added Passive Skills are Jewel Sockets` |
+ *
+ * 差异在句子中间，只削词尾的容错兜不住；第二例还差一组 is a / are。
+ *
+ * 只削长度 4 以上的词，别把 has 之类削坏。不规则复数（Enemy/Enemies）不管 ——
+ * 那种情况两边通常一致。实测这一档的碰撞率 0.63%，而且它只在前面几档全落空
+ * 时才用得上。
+ */
+const STOPWORDS = new Set(['is', 'are', 'a', 'an', 'the']);
+
+export function depluralKey(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[0-9#.]+/g, ' ')
+    .replace(/[^a-z]+/g, ' ')
+    .split(' ')
+    .filter((w) => w && !STOPWORDS.has(w))
+    .map((w) => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w))
+    .join('');
 }
 
 /** 剥掉 PoB 的 `{crafted}` / `{fractured}` 之类前缀标记 */
@@ -84,6 +115,7 @@ export function buildStatIndex(tsv: string): StatIndex {
   const byNorm = new Map<string, number>();
   const byRaw = new Map<string, number>();
   const byKey = new Map<string, number>();
+  const byDeplural = new Map<string, number>();
 
   for (const line of tsv.split('\n')) {
     const [text, hash, ns] = line.split('\t');
@@ -97,8 +129,10 @@ export function buildStatIndex(tsv: string): StatIndex {
     if (!byNorm.has(n)) byNorm.set(n, idx);
     const k = canonicalKey(text);
     if (!byKey.has(k)) byKey.set(k, idx);
+    const d = depluralKey(text);
+    if (!byDeplural.has(d)) byDeplural.set(d, idx);
   }
-  return { entries, byNorm, byRaw, byKey };
+  return { entries, byNorm, byRaw, byKey, byDeplural };
 }
 
 /**
@@ -150,6 +184,8 @@ function lookupExact(index: StatIndex, raw: string): StatEntry | null {
     // Has 1 Abyssal Socket ↔ Has # Abyssal Sockets
     index.byKey.get(key + 's'),
     key.endsWith('s') ? index.byKey.get(key.slice(0, -1)) : undefined,
+    // 复数 s 在句子中间的：Gain 3 Charges ↔ Gain # Charge
+    index.byDeplural.get(depluralKey(raw)),
   ];
   for (const idx of tries) {
     if (idx !== undefined) return index.entries[idx] ?? null;
@@ -215,7 +251,14 @@ export function matchMod(
   const ns = namespaceFor(hit.entry, mod.implicit);
   if (!ns) return NO_MATCH;
 
-  const vals = extractValues(hit.entry.text, hit.text);
+  let vals = extractValues(hit.entry.text, hit.text);
+  // 最松那档会把冠词当停用词丢掉，于是「an additional Curse」直接命中了
+  // 「# additional Curses」，走不到「冠词换成 1」那步，数值就丢了。
+  // 命中了但取不到值、而对照表文本里明明有 `#` 时，再用换过冠词的文本取一次。
+  if (vals.length === 0 && hit.entry.text.includes('#')) {
+    const withOne = articleToOne(hit.text);
+    if (withOne) vals = extractValues(hit.entry.text, withOne);
+  }
   let value: number | null = null;
   // `Adds A to B` 这类两个数取平均 —— 交易站也是这么算的
   if (vals.length >= 2) value = ((vals[0] ?? 0) + (vals[1] ?? 0)) / 2;

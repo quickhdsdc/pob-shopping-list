@@ -168,10 +168,25 @@ describe('对照表匹配', () => {
     expect(m.id).toBe(`enchant.stat_${entry.hash}`);
   });
 
-  it('对照表里带「#% chance to」前缀的，写死 100% 的那版认不出来', () => {
-    // 已知缺口，不是回归：手套上的 `Curse Enemies with Punishment on Hit` 是
-    // 必定触发版，对照表里只有 `#% chance to Curse Enemies with Punishment on Hit`。
-    // 规范键带上了 chanceto 三个词，对不上。留个测试盯着，将来补上了这里会红。
+  it('复数 s 在句子中间也能兜住', () => {
+    // 物品：Gain 3 Charges when you are Hit by an Enemy
+    // 交易站：Gain # Charge when you are Hit by an Enemy（单数）
+    const m = matchMod(idx, { line: 'Gain 3 Charges when you are Hit by an Enemy', implicit: false });
+    expect(m.id).toBe('explicit.stat_1582728645');
+    expect(m.value).toBe(3);
+  });
+
+  it('单数句 vs 复数句：1 X is a Y ↔ # Xs are Ys', () => {
+    const m = matchMod(idx, { line: '1 Added Passive Skill is a Jewel Socket', implicit: false });
+    expect(m.id).toBe('explicit.stat_4079888060');
+    expect(m.value).toBe(1);
+  });
+
+  it('必定触发版的 Curse on Hit 故意不匹配', () => {
+    // 手套上的 `Curse Enemies with Punishment on Hit` 是必定触发版；交易站只有
+    // `#% chance to Curse Enemies with Punishment on Hit`。**这是两个不同的词条** ——
+    // 硬把它匹配过去会生成一个搜「N% 几率触发」的查询，结果是错的。
+    // 界面上标红说搜不了，比悄悄给个错答案好。
     expect(matchMod(idx, { line: 'Curse Enemies with Punishment on Hit', implicit: true }).id).toBeNull();
   });
 });

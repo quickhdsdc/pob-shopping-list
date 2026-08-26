@@ -157,6 +157,27 @@ explicit.stat_4089743927|2|131
 
 ---
 
+## 单复数和冠词：交易站按占位符写，物品按实际写
+
+交易站的文本用 `#` 占位，整句就按占位符的形态写；物品文本写的是实际那一件的样子。
+差异不只在词尾：
+
+| 物品 | 交易站 |
+| --- | --- |
+| `Gain 3 Charges when you are Hit by an Enemy` | `Gain # Charge when you are Hit by an Enemy` |
+| `1 Added Passive Skill is a Jewel Socket` | `# Added Passive Skills are Jewel Sockets` |
+| `You can apply an additional Curse` | `You can apply # additional Curses` |
+| `Has 1 Abyssal Socket` | `Has # Abyssal Sockets` |
+
+所以最松那一档的规范键要**每个词都削复数 s、再丢掉 `is/are/a/an/the`**。
+实测碰撞率 0.63%，而且它只在前面几档全落空时才用得上。
+
+**但不是所有差异都该抹平。** 手套上的 `Curse Enemies with Punishment on Hit` 是必定
+触发版，交易站只有 `#% chance to Curse Enemies with Punishment on Hit` —— 那是**另一个
+词条**。硬匹配过去会生成一个搜「N% 几率触发」的查询，结果是错的。宁可标红说搜不了。
+
+---
+
 ## 值的取法
 
 - 单个数值：直接用

@@ -36,7 +36,7 @@ describe.each(realBuilds())('真实 build: $name', ({ code }) => {
     }
   });
 
-  it('稀有/魔法装备的识别率不低于 90%', () => {
+  it('稀有/魔法装备的识别率不低于 95%', () => {
     let total = 0;
     let unmatched = 0;
     for (const item of items) {
@@ -47,9 +47,10 @@ describe.each(realBuilds())('真实 build: $name', ({ code }) => {
       }
     }
     if (total === 0) return; // 全传奇的 build，没什么可算的
-    // 剩下的缺口是交易站的 stat 列表里确实没有对应文本的那几条
-    // （药剂的 Gain # Charges when you are Hit、必定触发版的 Curse on Hit）。
-    expect((1 - unmatched / total) * 100).toBeGreaterThanOrEqual(90);
+    // 剩下的缺口是交易站的 stat 列表里确实没有对应文本的那几条，
+    // 比如必定触发版的 Curse Enemies with Punishment on Hit（列表里只有
+    // 「#% chance to」那版，是另一个词条）。不是匹配缺陷。
+    expect((1 - unmatched / total) * 100).toBeGreaterThanOrEqual(95);
   });
 
   describe('生成的查询', () => {
