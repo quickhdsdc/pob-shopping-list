@@ -29,20 +29,21 @@ PoB 的权重是**把候选词条塞进 build 重算一遍**测出来的真实�
 
 ## 快速开始
 
-1. 下载 `index.html`，双击用浏览器打开（Chrome / Edge / Firefox 均可）
-2. 在别人的 PoB 里：`Import/Export` → `Generate` → 复制那串长字符
+1. 打开网站，或者下载 `index.html` 双击用浏览器打开（Chrome / Edge / Firefox 均可）
+2. 拿到别人的 build：
+   - PoB 里 `Import/Export` → `Generate` → 复制那串长字符
+   - poe.ninja 的 build 页点「Copy build code」
+   - 或者直接贴 **pobb.in / pastebin 的链接**（网站版才有，离线版没有后端）
 3. 粘进输入框 → 点「生成」
-
-> **注意**：pobb.in / pob.cool 的**链接**不行，浏览器跨域读不到，必须粘贴**代码本身**。
 
 ### 界面上的四个全局参数
 
 | 参数              | 说明                                                                 |
 | ----------------- | -------------------------------------------------------------------- |
-| 赛季              | 写进 URL 路径，例如 `Allflame`、`Standard`                            |
+| 赛季              | 写进 URL 路径。网站版会自动填成当前赛季，下拉里是官网的实时赛季列表   |
 | 挂单              | 对应交易站 `status`，默认「一口价」(`securable`)                      |
-| **容差 %**        | 数值下限 = 原件数值 × 容差。默认 80% —— 原件 +134 生命就搜 ≥107      |
-| 每件最多筛几条    | 稀有装备默认自动勾选前 N 条可识别词条，默认 4                         |
+| **容差 %**        | 数值门槛 = 原件数值 × 容差。默认 80% —— 原件 +134 生命就搜 ≥107      |
+| 每件最多筛几条    | 稀有装备默认自动勾选 N 条可识别词条（词缀优先于植入），默认 4          |
 
 每张卡片里，**每条词条都有独立的勾选框和数值输入框**，可以逐条改。
 传奇装备默认不勾任何词条（按名字 + 底子搜就够精确了），勾上则可以额外限定数值范围。
@@ -79,6 +80,16 @@ const xml = new TextDecoder().decode(await new Response(stream).arrayBuffer());
 只用第 1 级时未识别 56 条；加到三级后降到 18 条。
 第 3 级规范键的碰撞率实测 **39 / 7731 = 0.5%**，碰撞的基本都是「本地 vs 全局格挡」这类本就有歧义的词条。
 
+### 2b. 魔法装备的底子
+
+魔法装备在 PoB 里只有一行名字 —— `Flagellant's Quicksilver Flask of Incision` ——
+而交易站的 `type` 只认底子本身。内嵌了 1,106 条底子物品表（`data/bases.tsv`，
+从 PoB 的 `Data/Bases/*.lua` 提取），按名字从长到短做词边界匹配，
+剥出 `Quicksilver Flask`（`Large Cluster Jewel` 会优先于 `Cluster Jewel`）。
+
+认不出来的底子**宁可不写 `type`**，让搜索宽一点，也不写个不存在的底子搜出空结果；
+界面上会标红提示。
+
 ### 3. 按位置取值
 
 命中对照表后，用对照表文本反推正则（`#` → `([+-]?\d+(?:\.\d+)?)`）去匹配原始词条行，
@@ -111,13 +122,49 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
 
 ```
 装备数        : 44
-稀有/魔法词条 : 154
-未识别        : 18
-识别率        : 88%
+稀有/魔法词条 : 149
+未识别        : 15
+识别率        : 90%
 生成的链接数  : 44
 ```
 
 传奇装备识别率视作 100% —— 它们按名字 + 底子搜，词条识别与否不影响结果。
+
+除了这几个数，`test/build.test.ts` 还盯着三类曾经真出过的错，每一类都有专门的回归用例：
+
+| 曾经的错 | 后果 | 现在的断言 |
+| --- | --- | --- |
+| 魔法装备拿带词缀的全名当底子 | 44 件里 13 件搜出空结果 | 没有一件装备的 `type` 是交易站不存在的底子 |
+| 容差取整把小数值压成 `0` | `min: 0` 等于没筛 | 没有一条筛选的数值是 `0` |
+| 默认按文本顺序勾前 N 条 | 影响力植入把真正的词缀挤掉 | 没有一件非传奇装备只勾中了植入词条 |
+
+---
+
+## 后端（就两个只读端点）
+
+主体还是纯前端。后端只有一个 Cloudflare Worker，存在的理由是浏览器办不到的两件事：
+
+| 端点 | 干什么 | 为什么非得有服务端 |
+| --- | --- | --- |
+| `GET /api/leagues` | 当前赛季列表和默认赛季 | 官网那个端点没有 CORS 头，浏览器直接读不到 |
+| `GET /api/import?url=` | 从分享链接取回 PoB 代码 | 同上，跨域 |
+
+赛季以前是手填的 `Allflame` —— 赛季一换，整站生成的链接全部失效。现在从官网的
+`api/leagues` 取，`category.current` 是当前挑战赛季的权威标记（软核那条靠 `rules` 为空区分）。
+那个端点按 IP 限流（`5:5:10,10:10:30,15:10:300`），一个 Worker 上所有用户共用出口 IP，
+所以结果在边缘缓存一小时。
+
+链接导入**锁死域名白名单**（目前是 pobb.in 和 pastebin）。一个能替调用方抓任意 URL
+的端点就是个 SSRF 跳板，这条在 `test/worker.test.ts` 里有专门的用例盯着。
+抓回来的内容不靠「看着像 base64」判断，而是**真解压出来看是不是 PoB 存档**，
+所以返回给前端的一定是能用的代码。
+
+**刻意不做的事**：不碰 GGG 的 trade API。不估价、不代查、不需要 OAuth，
+因此没有限流队列、没有运维负担、没有合规风险。代价是这个工具告诉你要买哪些东西，
+但不告诉你要花多少钱。
+
+两个端点都是「有更好，没有也能用」：离线单文件版拿不到它们，赛季退回手填、
+链接导入退回提示粘贴代码，其余功能一模一样。
 
 ---
 
@@ -128,48 +175,100 @@ URL 形如 `https://www.pathofexile.com/trade/search/<赛季>?q=<urlencoded JSON
   **这是下一步最值得补的一块。**
 - **药剂附魔**（`Used when Charges reach full`）同上，不过本来也没必要搜。
 - **传奇的多行词条**会被拆成两行导致识别失败 —— 无影响，传奇按名字搜。
-- 只支持粘贴代码，**不支持直接吃 pobb.in 链接**（浏览器同源策略）。想支持得加一个转发用的后端或浏览器扩展。
+- **链接导入只支持 pobb.in 和 pastebin**。poe.ninja / pob.cool / poeplanner / maxroll
+  这些站取不到原始代码，界面上会提示去点它们自己的「复制代码」按钮。
+  离线单文件版没有后端，链接导入不可用。
+- **数值方向只按正负判断**：负数（`-13 技能法力消耗`）越负越好，用上限 `max`；
+  正数用下限 `min`。像「20% 增加属性需求」这种正数但越小越好的词条会填成下限，需要手动改。
+  真要做对得有一份「哪些词条越小越好」的清单。
 - 未识别的词条在界面上标红、勾选框禁用，**不会静默丢弃**。
 
 ---
 
 ## 从源码构建
 
+需要 Node 20 以上。
+
 ```bash
-# 1) 从本地 PoB 安装目录提取词条对照表
-tools/extract-lut.sh "/d/Path of Building Community"
+npm install
 
-# 2) 把对照表注入模板，产出 index.html
-./build.sh
-
-# 3) 无头回归测试（需要装了 Chrome 或 Edge）
-powershell -ExecutionPolicy Bypass -File test/headless-test.ps1
+npm run dev              # 前端开发服务器（没有 /api，赛季和链接导入自动降级）
+npm run worker:dev       # 连 Worker 一起跑，本地就有 /api/leagues 和 /api/import
+npm test                 # 单元 + 集成测试（85 个用例，不需要浏览器）
+npm run build            # 产出 dist/
+npm run build:single     # 再把一切压成根目录的 index.html
+npm run deploy           # 部署到 Cloudflare（需要先 wrangler login）
 ```
+
+两种产物，同一份源码：
+
+| 产物 | 用途 | 大小 |
+| --- | --- | --- |
+| `dist/` + Worker | 部署上线。HTML 只有 2 KB，两张对照表当静态资源单独取，交给 CDN 缓存 | 584 KB（其中 569 KB 是可缓存的对照表） |
+| `index.html` | 下载下来双击即用的离线版，对照表内联在页面里，不发任何网络请求 | 587 KB |
+
+### 测试
+
+```bash
+npm test                 # 逻辑：解码、解析、匹配、查询组装（vitest，快）
+npm run test:smoke       # dist/ 在真实 HTTP 下能不能跑起来（需要 Chrome/Edge）
+npm run test:offline     # 单文件版在 file:// 下能不能跑起来（需要 Chrome/Edge）
+```
+
+三层各管一段：`npm test` 覆盖 `src/core/` 的全部逻辑，另外两个只验证它碰不到的
+「页面真的启动得起来吗、对照表真的加载得到吗」—— 一个走 fetch 分支，一个走内联分支。
 
 ### 目录结构
 
 ```
 .
-├── index.html                  # 构建产物，可直接双击（约 550 KB）
-├── build.sh                    # 注入对照表 → index.html
+├── index.html                  # build:single 的产物，双击即用（约 590 KB，别手改）
+├── wrangler.jsonc              # Cloudflare Worker 配置
 ├── src/
-│   └── app.template.html       # 应用本体，含 __LUT__ 占位符
+│   ├── index.html              # Vite 入口
+│   ├── main.ts                 # 页面装配：读控件、跑流程、报状态
+│   ├── ui.ts                   # 卡片渲染和勾选状态
+│   ├── api.ts                  # 跟自家 Worker 说话，取不到就降级
+│   ├── data.ts                 # 两张对照表的加载（内联优先，否则 fetch）
+│   ├── styles.css
+│   └── core/                   # 纯逻辑，不碰 DOM，单测都打在这一层
+│       ├── pob.ts              # 分享码解码（不碰 DOM，Worker 也复用它）
+│       ├── build.ts            # build XML -> 装备清单（要 DOMParser）
+│       ├── items.ts            # 物品文本解析
+│       ├── stats.ts            # 词条文本 -> 交易站 stat id
+│       ├── bases.ts            # 底子物品表
+│       └── query.ts            # 容差、默认勾选、查询组装、URL
+├── worker/
+│   ├── index.ts                # 路由 + 边缘缓存 + CORS
+│   ├── leagues.ts              # 赛季列表
+│   └── import.ts               # 分享链接 -> PoB 代码（含域名白名单）
 ├── data/
-│   └── stat-lut.tsv            # 词条文本 -> 交易站 stat hash（7,731 条）
+│   ├── stat-lut.tsv            # 词条文本 -> 交易站 stat hash（7,731 条）
+│   └── bases.tsv               # 底子物品名 -> 类别（1,106 条）
 ├── tools/
-│   └── extract-lut.sh          # 从 PoB 的 TradeSiteStats.lua 重新生成对照表
+│   ├── extract-lut.sh          # 从 PoB 的 TradeSiteStats.lua 重新生成词条表
+│   ├── extract-bases.sh        # 从 PoB 的 Data/Bases/*.lua 重新生成底子表
+│   └── build-single.mjs        # 把 dist/ 压成单文件
 ├── test/
-│   ├── headless-test.ps1       # 无头回归测试
+│   ├── *.test.ts               # vitest
+│   ├── smoke.ps1               # dist/ 的浏览器冒烟测试
+│   ├── offline.ps1             # 单文件版的浏览器冒烟测试
 │   └── sample-build.pobcode    # 测试用 PoB 代码
 └── docs/
     └── trade-api-notes.md      # 交易站查询格式笔记
 ```
 
-改代码请改 `src/app.template.html`，**不要直接改 `index.html`**（会被下次构建覆盖）。
-
 ### 赛季更新后
 
-GGG 加了新词条时，重跑第 1、2 步即可：先更新 PoB 到最新版，再执行 `extract-lut.sh` + `build.sh`。
+GGG 加了新词条或新底子时：先更新 PoB 到最新版，然后
+
+```bash
+npm run data             # 重新提取两张表
+npm run build:single     # 重新构建
+npm test
+```
+
+界面上出现「底子没认出来」的红字，就是底子表该更新了。
 
 ---
 
